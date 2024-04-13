@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.klondike;
+package com.avogine.solitavo.scene.render;
 
 import java.util.*;
 
@@ -10,7 +10,6 @@ import com.avogine.game.scene.Scene;
 import com.avogine.game.util.*;
 import com.avogine.render.data.experimental.*;
 import com.avogine.render.shader.NormalShader;
-import com.avogine.solitavo.scene.render.*;
 
 /**
  *

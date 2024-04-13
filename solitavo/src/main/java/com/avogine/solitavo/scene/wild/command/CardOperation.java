@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.klondike.command;
+package com.avogine.solitavo.scene.wild.command;
 
 /**
  *

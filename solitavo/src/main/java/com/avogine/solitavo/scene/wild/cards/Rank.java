@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.klondike.entity;
+package com.avogine.solitavo.scene.wild.cards;
 
 /**
  *

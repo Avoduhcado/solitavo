@@ -65,9 +65,9 @@ public class SpriteRenderer implements Cleanupable {
 	 * @param position
 	 * @param size
 	 * @param rotation
+	 * @param scale Apply scaling from center of sprite.
 	 * @param textureID
 	 * @param textureOffset
-	 * @param scale Apply scaling from center of sprite.
 	 */
 	public void drawSprite(Vector2f position, Vector2f size, float rotation, float scale, int textureID, Vector4f textureOffset) {
 		spriteShader.bind();
@@ -93,6 +93,16 @@ public class SpriteRenderer implements Cleanupable {
 		glBindVertexArray(0);
 		
 		spriteShader.unbind();
+	}
+	
+	/**
+	 * @param position
+	 * @param size
+	 * @param textureId
+	 * @param textureOffset
+	 */
+	public void drawSprite(Vector2f position, Vector2f size, int textureId, Vector4f textureOffset) {
+		drawSprite(position, size, 0, 1, textureId, textureOffset);
 	}
 
 	@Override

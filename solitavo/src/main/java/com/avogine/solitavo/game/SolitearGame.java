@@ -3,7 +3,7 @@ package com.avogine.solitavo.game;
 import com.avogine.game.Game;
 import com.avogine.game.ui.nuklear.NuklearUI;
 import com.avogine.io.*;
-import com.avogine.solitavo.scene.klondike.KlondikeScene;
+import com.avogine.solitavo.scene.wild.WildScene;
 
 /**
  *
@@ -15,7 +15,7 @@ public class SolitearGame extends Game {
 	 */
 	public SolitearGame() {
 		super();
-		setScene(new KlondikeScene());
+		setScene(new WildScene());
 	}
 	
 	@Override
