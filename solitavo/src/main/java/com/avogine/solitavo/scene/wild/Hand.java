@@ -8,6 +8,7 @@ import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.Card;
+import com.avogine.solitavo.scene.wild.command.*;
 import com.avogine.solitavo.scene.wild.util.*;
 
 /**
@@ -60,23 +61,23 @@ public class Hand {
 	
 	/**
 	 * @param consumer
+	 * @return 
 	 */
-	public void placeCards(CardHolder consumer) {
-		consumer.addCards(supplier.removeCards(getCards()));
+	public CardOperation placeCards(CardHolder consumer) {
+		var moveOperation = new CardMoveOperation(getCards(), supplier, consumer);
 		cards.clear();
-		supplier = null;
+		return moveOperation;
 	}
 	
 	/**
 	 * @param cards
-	 * @param supplier 
 	 * @param consumers 
+	 * @return 
 	 */
-	public void autoPlaceCard(List<Card> cards, CardHolder supplier, List<CardStack> consumers) {
-		consumers.stream()
+	public Optional<CardStack> autoPlaceCard(List<Card> cards, List<CardStack> consumers) {
+		return consumers.stream()
 		.filter(consumer -> consumer.canStack(cards))
-		.findFirst()
-		.ifPresent(consumer -> consumer.addCards(supplier.removeCards(cards)));
+		.findFirst();
 	}
 	
 	/**

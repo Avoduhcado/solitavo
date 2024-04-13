@@ -45,16 +45,23 @@ public class Pile implements CardStack {
 	}
 	
 	/**
-	 * 
+	 * @param faceUp 
 	 */
-	public void revealTopCard() {
+	public void revealTopCard(boolean faceUp) {
 		if (cards.isEmpty()) {
 			return;
 		}
-		cards.getLast().setFaceUp(true);
+		cards.getLast().setFaceUp(faceUp);
 		updateFaceUpBounds();
 	}
-
+	
+	/**
+	 * 
+	 */
+	public void revealTopCard() {
+		revealTopCard(true);
+	}
+	
 	@Override
 	public void addCards(List<Card> cards) {
 		cards.forEach(card -> {
@@ -132,7 +139,22 @@ public class Pile implements CardStack {
 		} else {
 			return previousCard.getPosition().y + 12.5f;
 		}
-		
+	}
+	
+	/**
+	 * @param card
+	 * @return
+	 */
+	public int getIndexOf(Card card) {
+		return cards.indexOf(card);
+	}
+	
+	/**
+	 * @param index
+	 * @return
+	 */
+	public boolean isCardFaceUpAtIndex(int index) {
+		return cards.get(index).isFaceUp();
 	}
 	
 	/**

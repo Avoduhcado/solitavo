@@ -15,4 +15,11 @@ public interface CardOperation {
 	 */
 	public void rollback();
 	
+	/**
+	 * 
+	 */
+	public default void describe() {
+		
+	}
+	
 }

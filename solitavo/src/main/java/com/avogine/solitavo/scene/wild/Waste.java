@@ -39,7 +39,14 @@ public class Waste implements CardHolder {
 		this.cards.addAll(cards);
 		splayCards();
 	}
-	
+
+	/**
+	 * @return
+	 */
+	public List<Card> getRecycleCards() {
+		return cards.reversed();
+	}
+
 	/**
 	 * @return
 	 */

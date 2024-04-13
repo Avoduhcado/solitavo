@@ -3,6 +3,7 @@ package com.avogine.solitavo.scene.wild;
 import java.util.*;
 
 import org.joml.*;
+import org.joml.Math;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.render.data.TextureAtlas;
@@ -61,15 +62,18 @@ public class Stock implements CardHolder {
 
 	@Override
 	public List<Card> removeCards(List<Card> cards) {
-		var drawnCards = new ArrayList<Card>();
-		int i = drawCount;
-		while (i > 0 && !this.cards.isEmpty()) {
-			drawnCards.add(this.cards.removeLast());
-			i--;
-		}
-		return drawnCards;
+		this.cards.removeAll(cards);
+		return cards;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public List<Card> getCardsToDraw() {
+		return cards.reversed().subList(0, Math.min(drawCount, cards.size()));
+	}
+	
 	/**
 	 * @param renderer
 	 * @param texture
@@ -84,11 +88,10 @@ public class Stock implements CardHolder {
 	}
 	
 	/**
-	 * 
 	 * @return
 	 */
-	public List<Card> getCards() {
-		return cards;
+	public boolean isEmpty() {
+		return cards.isEmpty();
 	}
 	
 	/**
