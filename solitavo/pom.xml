@@ -12,9 +12,17 @@
     <repository>
       <id>github</id>
       <name>GitHub Avoduhcado Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/avoduhcado/mavogine</url>
+      <url>https://maven.pkg.github.com/avoduhcado/solitavo</url>
     </repository>
   </repositories>
+  
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Avoduhcado Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/avoduhcado/solitavo</url>
+    </repository>
+  </distributionManagement>
   
   <build>
     <plugins>
