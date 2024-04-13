@@ -9,12 +9,12 @@ import org.joml.primitives.Rectanglef;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.Card;
-import com.avogine.solitavo.scene.wild.util.CardSupplier;
+import com.avogine.solitavo.scene.wild.util.CardHolder;
 
 /**
  *
  */
-public class Waste implements CardSupplier {
+public class Waste implements CardHolder {
 	
 	private final List<Card> cards;
 	
@@ -34,9 +34,7 @@ public class Waste implements CardSupplier {
 		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
 	}
 	
-	/**
-	 * @param cards
-	 */
+	@Override
 	public void addCards(List<Card> cards) {
 		this.cards.addAll(cards);
 		splayCards();
@@ -98,5 +96,5 @@ public class Waste implements CardSupplier {
 			return cards.getLast().getBoundingBox();
 		}
 	}
-	
+
 }

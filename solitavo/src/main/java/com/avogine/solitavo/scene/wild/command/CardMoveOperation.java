@@ -3,7 +3,7 @@ package com.avogine.solitavo.scene.wild.command;
 import java.util.List;
 
 import com.avogine.solitavo.scene.wild.cards.Card;
-import com.avogine.solitavo.scene.wild.util.*;
+import com.avogine.solitavo.scene.wild.util.CardHolder;
 
 /**
  *
@@ -12,8 +12,8 @@ public class CardMoveOperation implements CardOperation {
 
 	private List<Card> cards;
 	
-	private CardSupplier origin;
-	private CardConsumer destination;
+	private CardHolder origin;
+	private CardHolder destination;
 	
 	/**
 	 * @param cards 
@@ -21,7 +21,7 @@ public class CardMoveOperation implements CardOperation {
 	 * @param destination 
 	 * 
 	 */
-	public CardMoveOperation(List<Card> cards, CardSupplier origin, CardConsumer destination) {
+	public CardMoveOperation(List<Card> cards, CardHolder origin, CardHolder destination) {
 		this.cards = cards;
 		this.origin = origin;
 		this.destination = destination;

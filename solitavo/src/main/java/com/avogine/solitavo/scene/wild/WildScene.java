@@ -27,7 +27,7 @@ import com.avogine.render.data.TextureAtlas;
 import com.avogine.render.loader.texture.TextureCache;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.util.CardConsumer;
+import com.avogine.solitavo.scene.wild.util.CardStack;
 
 /**
  *
@@ -127,7 +127,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		event.transformPoint(projection);
 		
 		if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
-			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), waste, CardConsumer.concatWithStream(foundations, tableau)));
+			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), waste, CardStack.concatWithStream(foundations, tableau)));
 		} else if (Stream.of(foundations).anyMatch(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())) {
 			Stream.of(foundations)
 			.filter(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())
@@ -137,7 +137,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			Stream.of(tableau)
 			.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())
 			.findFirst()
-			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile, CardConsumer.concatWithStream(foundations, tableau)));
+			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile, CardStack.concatWithStream(foundations, tableau)));
 		}
 	}
 	
@@ -150,7 +150,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			if (stock.getCards().isEmpty()) {
 				stock.addCards(waste.recycleCards());
 			} else {
-				waste.addCards(stock.takeCards());
+				waste.addCards(stock.removeCards(List.of()));
 			}
 		} else if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
 			waste.getCard().ifPresent(card -> hand.holdCard(card, waste));

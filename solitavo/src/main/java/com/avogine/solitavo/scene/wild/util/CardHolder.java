@@ -7,8 +7,13 @@ import com.avogine.solitavo.scene.wild.cards.Card;
 /**
  *
  */
-public interface CardSupplier {
+public interface CardHolder {
 	
+	/**
+	 * @param cards
+	 */
+	public void addCards(List<Card> cards);
+
 	/**
 	 * @param cards
 	 * @return 

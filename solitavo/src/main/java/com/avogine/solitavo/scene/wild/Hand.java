@@ -17,7 +17,7 @@ public class Hand {
 
 	private final Map<Card, Vector2f> cards;
 	
-	private CardSupplier supplier;
+	private CardHolder supplier;
 	
 	/**
 	 * 
@@ -30,7 +30,7 @@ public class Hand {
 	 * @param card
 	 * @param supplier 
 	 */
-	public void holdCard(Card card, CardSupplier supplier) {
+	public void holdCard(Card card, CardHolder supplier) {
 		this.supplier = supplier;
 		try {
 			this.cards.put(card, (Vector2f) card.getPosition().clone());
@@ -43,7 +43,7 @@ public class Hand {
 	 * @param cards
 	 * @param supplier 
 	 */
-	public void holdCards(List<Card> cards, CardSupplier supplier) {
+	public void holdCards(List<Card> cards, CardHolder supplier) {
 		for (Card card : cards) {
 			holdCard(card, supplier);
 		}
@@ -61,7 +61,7 @@ public class Hand {
 	/**
 	 * @param consumer
 	 */
-	public void placeCards(CardConsumer consumer) {
+	public void placeCards(CardHolder consumer) {
 		consumer.addCards(supplier.removeCards(getCards()));
 		cards.clear();
 		supplier = null;
@@ -72,7 +72,7 @@ public class Hand {
 	 * @param supplier 
 	 * @param consumers 
 	 */
-	public void autoPlaceCard(List<Card> cards, CardSupplier supplier, List<CardConsumer> consumers) {
+	public void autoPlaceCard(List<Card> cards, CardHolder supplier, List<CardStack> consumers) {
 		consumers.stream()
 		.filter(consumer -> consumer.canStack(cards))
 		.findFirst()

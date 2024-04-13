@@ -8,11 +8,12 @@ import org.joml.primitives.Rectanglef;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.*;
+import com.avogine.solitavo.scene.wild.util.CardHolder;
 
 /**
  * 
  */
-public class Stock {
+public class Stock implements CardHolder {
 
 	private final List<Card> cards;
 	
@@ -27,7 +28,7 @@ public class Stock {
 	private int drawCount;
 	
 	/**
-	 * 
+	 * @param drawCount 
 	 */
 	public Stock(int drawCount) {
 		cards = new ArrayList<>();
@@ -49,9 +50,7 @@ public class Stock {
 		this(3);
 	}
 	
-	/**
-	 * @param cards
-	 */
+	@Override
 	public void addCards(List<Card> cards) {
 		this.cards.addAll(cards);
 		cards.forEach(card -> {
@@ -59,20 +58,18 @@ public class Stock {
 			card.setPosition(position);
 		});
 	}
-	
-	/**
-	 * @return
-	 */
-	public List<Card> takeCards() {
+
+	@Override
+	public List<Card> removeCards(List<Card> cards) {
 		var drawnCards = new ArrayList<Card>();
 		int i = drawCount;
-		while (i > 0 && !cards.isEmpty()) {
-			drawnCards.add(cards.removeLast());
+		while (i > 0 && !this.cards.isEmpty()) {
+			drawnCards.add(this.cards.removeLast());
 			i--;
 		}
 		return drawnCards;
 	}
-	
+
 	/**
 	 * @param renderer
 	 * @param texture
@@ -101,5 +98,5 @@ public class Stock {
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
 	}
-	
+
 }

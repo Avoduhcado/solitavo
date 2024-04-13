@@ -8,12 +8,12 @@ import org.joml.primitives.Rectanglef;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.util.*;
+import com.avogine.solitavo.scene.wild.util.CardStack;
 
 /**
  *
  */
-public class Pile implements CardConsumer, CardSupplier {
+public class Pile implements CardStack {
 
 	private final List<Card> cards;
 	
