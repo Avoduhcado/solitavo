@@ -26,12 +26,12 @@ public class Stock implements CardHolder {
 	
 	private final Vector4f blankCardOffset;
 	
-	private int drawCount;
+	private DrawMode drawMode;
 	
 	/**
-	 * @param drawCount 
+	 * @param drawMode 
 	 */
-	public Stock(int drawCount) {
+	public Stock(DrawMode drawMode) {
 		cards = new ArrayList<>();
 		position = new Vector2f(0f, 0f);
 		size = new Vector2f(72f, 100f);
@@ -41,14 +41,14 @@ public class Stock implements CardHolder {
 				(float) Suit.BONUS.ordinal() / Suit.values().length,
 				1f / Rank.values().length, 1f / Suit.values().length);
 		
-		this.drawCount = drawCount;
+		this.drawMode = drawMode;
 	}
 	
 	/**
 	 * 
 	 */
 	public Stock() {
-		this(3);
+		this(DrawMode.STANDARD);
 	}
 	
 	@Override
@@ -71,7 +71,7 @@ public class Stock implements CardHolder {
 	 * @return
 	 */
 	public List<Card> getCardsToDraw() {
-		return cards.reversed().subList(0, Math.min(drawCount, cards.size()));
+		return cards.reversed().subList(0, Math.min(drawMode.drawCount, cards.size()));
 	}
 	
 	/**
@@ -95,11 +95,38 @@ public class Stock implements CardHolder {
 	}
 	
 	/**
+	 * @return the cards
+	 */
+	public List<Card> getCards() {
+		return cards;
+	}
+	
+	/**
 	 * 
 	 * @return
 	 */
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
+	}
+	
+	/**
+	 *
+	 */
+	public enum DrawMode {
+		/**
+		 * Deal three cards at a time from the Stock.
+		 */
+		STANDARD(3),
+		/**
+		 * Deal one card at a time from the Stock.
+		 */
+		SINGLE(1);
+		
+		int drawCount;
+		
+		DrawMode(int drawCount) {
+			this.drawCount = drawCount;
+		}
 	}
 
 }

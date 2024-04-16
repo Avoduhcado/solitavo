@@ -3,6 +3,7 @@ package com.avogine.solitavo.scene.wild;
 import java.util.*;
 
 import org.joml.Vector2f;
+import org.joml.primitives.Rectanglef;
 
 import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
@@ -20,11 +21,14 @@ public class Hand {
 	
 	private CardHolder supplier;
 	
+	private final Rectanglef boundingBox;
+	
 	/**
 	 * 
 	 */
 	public Hand() {
 		cards = new LinkedHashMap<>();
+		boundingBox = new Rectanglef();
 	}
 	
 	/**
@@ -86,6 +90,13 @@ public class Hand {
 	 */
 	public void moveCards(float x, float y) {
 		cards.keySet().forEach(card -> card.getPosition().add(x, y));
+		var cardArray = cards.keySet().toArray(new Card[0]);
+		if (cardArray.length == 0) {
+			return;
+		}
+		var lastCard = cardArray[cardArray.length - 1];
+		boundingBox.setMin(cardArray[0].getPosition())
+		.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
 	}
 	
 	/**
@@ -108,6 +119,13 @@ public class Hand {
 	 */
 	public int getHeldCount() {
 		return cards.size();
+	}
+	
+	/**
+	 * @return
+	 */
+	public Rectanglef getBoundingBox() {
+		return boundingBox;
 	}
 	
 	/**

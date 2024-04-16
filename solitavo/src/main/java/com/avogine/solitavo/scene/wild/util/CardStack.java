@@ -21,8 +21,17 @@ public interface CardStack extends CardHolder {
 	 * @param array2
 	 * @return
 	 */
-	public static List<CardStack> concatWithStream(CardStack[] array1, CardStack[] array2) {
-		return Stream.concat(Arrays.stream(array1), Arrays.stream(array2)).toList();
+	public static Stream<CardStack> concatWithStream(CardStack[] array1, CardStack[] array2) {
+		return Stream.concat(Arrays.stream(array1), Arrays.stream(array2));
 	}
 
+	/**
+	 * @param array1
+	 * @param array2
+	 * @return
+	 */
+	public static List<CardStack> concatToList(CardStack[] array1, CardStack[] array2) {
+		return concatWithStream(array1, array2).toList();
+	}
+	
 }

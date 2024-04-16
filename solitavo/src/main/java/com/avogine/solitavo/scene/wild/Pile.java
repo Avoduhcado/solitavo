@@ -24,6 +24,9 @@ public class Pile implements CardStack {
 	private final Rectanglef boundingBox;
 	
 	private final Rectanglef faceUpBounds;
+
+	private final float faceDownOffset;
+	private final float faceUpOffset;
 	
 	/**
 	 * @param index 
@@ -34,6 +37,8 @@ public class Pile implements CardStack {
 		size = new Vector2f(72f, 100f);
 		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
 		faceUpBounds = new Rectanglef(boundingBox);
+		faceDownOffset = 12f;
+		faceUpOffset = 20f;
 	}
 	
 	/**
@@ -41,7 +46,7 @@ public class Pile implements CardStack {
 	 */
 	public void dealCard(Card card) {
 		cards.add(card);
-		card.setPosition(position.x, position.y + (12.5f * cards.indexOf(card)));
+		card.setPosition(position.x, position.y + (faceDownOffset * cards.indexOf(card)));
 	}
 	
 	/**
@@ -135,9 +140,9 @@ public class Pile implements CardStack {
 		if (previousCard == null) {
 			return position.y;
 		} else if (previousCard.isFaceUp()) {
-			return previousCard.getPosition().y + 20f;
+			return previousCard.getPosition().y + faceUpOffset;
 		} else {
-			return previousCard.getPosition().y + 12.5f;
+			return previousCard.getPosition().y + faceDownOffset;
 		}
 	}
 	

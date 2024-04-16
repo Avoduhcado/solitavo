@@ -91,7 +91,7 @@ public class Card {
 	}
 	
 	private void updateBoundingBox() {
-		boundingBox.setMin(position).setMax(position.x + size.x, position.y + size.y);
+		boundingBox.setMin(position.x, position.y).setMax(position.x + size.x, position.y + size.y);
 	}
 
 	/**
@@ -136,6 +136,16 @@ public class Card {
 				(float) (isFaceUp() ? getSuit().ordinal() : Suit.BONUS.ordinal()) / Suit.values().length,
 				1f / atlas.getColumns(), 1f / atlas.getRows());
 		return TEXTURE_OFFSET;
+	}
+	
+	/**
+	 * @param cardBack
+	 */
+	public static void setCardBack(int cardBack) {
+		if (cardBack < 0 || cardBack > 13) {
+			return;
+		}
+		CARD_BACK = cardBack;
 	}
 	
 }
