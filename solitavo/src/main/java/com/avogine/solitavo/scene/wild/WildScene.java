@@ -21,9 +21,11 @@ import org.lwjgl.glfw.GLFW;
 
 import com.avogine.game.Game;
 import com.avogine.game.scene.Scene;
+import com.avogine.game.ui.nuklear.DebugInfo;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
 import com.avogine.io.listener.*;
+import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.render.loader.texture.TextureCache;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
@@ -62,6 +64,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		spriteRenderer = new SpriteRenderer();
 		
 		game.register(spriteRenderer);
+		game.register(new DebugInfo());
 		
 		game.addInputListener(this);
 		
@@ -157,7 +160,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		event.transformPoint(projection);
 		
 		if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
-			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), CardStack.concatToList(foundations, tableau))
+			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), List.of(CardStack.concatArrays(foundations, tableau)))
 					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(List.of(card), waste, cardStack))));
 		} else if (Stream.of(foundations).anyMatch(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())) {
 			Stream.of(foundations)
@@ -169,13 +172,14 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			Stream.of(tableau)
 			.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())
 			.findFirst()
-			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), CardStack.concatToList(foundations, tableau))
+			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), List.of(CardStack.concatArrays(foundations, tableau)))
 					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile, cardStack))));
 		}
 	}
 	
 	@Override
 	public void mousePressed(MouseEvent event) {
+		// TODO For some reason mouse click events and press/release events conflict when activating a pile that reveals a card that can be auto placed and fires two moves in one sequence of mouse actions
 		event.transformPoint(projection);
 		lastMouse.set(event.mouseX, event.mouseY);
 		

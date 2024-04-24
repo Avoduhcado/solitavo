@@ -34,4 +34,11 @@ public interface CardStack extends CardHolder {
 		return concatWithStream(array1, array2).toList();
 	}
 	
+	public static CardStack[] concatArrays(CardStack[] array1, CardStack[] array2) {
+		var concattedArray = new CardStack[array1.length + array2.length];
+		System.arraycopy(array1, 0, concattedArray, 0, array1.length);
+		System.arraycopy(array2, 0, concattedArray, array1.length, array2.length);
+		return concattedArray;
+	}
+	
 }
