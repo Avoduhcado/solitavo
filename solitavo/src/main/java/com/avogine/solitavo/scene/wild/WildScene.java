@@ -25,7 +25,6 @@ import com.avogine.game.ui.nuklear.DebugInfo;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
 import com.avogine.io.listener.*;
-import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.render.loader.texture.TextureCache;
 import com.avogine.solitavo.scene.render.SpriteRenderer;

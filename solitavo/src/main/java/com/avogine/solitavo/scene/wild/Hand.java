@@ -97,6 +97,7 @@ public class Hand {
 		var lastCard = cardArray[cardArray.length - 1];
 		boundingBox.setMin(cardArray[0].getPosition())
 		.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
+		boundingBox.scale(0.75f, boundingBox.maxX - (boundingBox.lengthX() / 2f), boundingBox.maxY - (boundingBox.lengthY() / 2f));
 	}
 	
 	/**
