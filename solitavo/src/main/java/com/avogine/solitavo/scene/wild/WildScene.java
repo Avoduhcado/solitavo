@@ -69,11 +69,17 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		
 		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
 		
-		setupTable(8675309343L ^ System.currentTimeMillis());
+		setupTable(random.nextLong());
 	}
 	
 	private void setupTable(long seed) {
 		this.seed = seed;
+		random.setSeed(seed);
+		
+		setupTable();
+	}
+	
+	private void setupTable() {
 		List<Card> cards = new ArrayList<>();
 		for (int i = 0; i < 52; i++) {
 			cards.add(new Card(new Vector2f(), new Vector2f(72f, 100f), Rank.values()[i % 13], Suit.values()[i / 13]));
@@ -178,7 +184,6 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	
 	@Override
 	public void mousePressed(MouseEvent event) {
-		// TODO For some reason mouse click events and press/release events conflict when activating a pile that reveals a card that can be auto placed and fires two moves in one sequence of mouse actions
 		event.transformPoint(projection);
 		lastMouse.set(event.mouseX, event.mouseY);
 		
@@ -257,9 +262,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			return;
 		}
 		switch (event.key) {
-			case GLFW.GLFW_KEY_F -> undoOperation();
-			case GLFW.GLFW_KEY_X -> setupTable(seed);
-			case GLFW.GLFW_KEY_A -> setupTable(8675309343L ^ System.currentTimeMillis());
+			case GLFW.GLFW_KEY_Z -> undoOperation();
+			case GLFW.GLFW_KEY_Q -> setupTable();
+			case GLFW.GLFW_KEY_E -> setupTable(random.nextLong());
 			case GLFW.GLFW_KEY_0 -> Card.setCardBack(0);
 			case GLFW.GLFW_KEY_3 -> Card.setCardBack(3);
 			case GLFW.GLFW_KEY_4 -> Card.setCardBack(4);

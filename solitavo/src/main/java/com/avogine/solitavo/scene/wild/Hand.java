@@ -42,6 +42,7 @@ public class Hand {
 		} catch (CloneNotSupportedException e) {
 			AvoLog.log().error("Failed to clone card position.", e);
 		}
+		updateBoundingBox();
 	}
 	
 	/**
@@ -61,6 +62,7 @@ public class Hand {
 		cards.forEach(Card::setPosition);
 		cards.clear();
 		supplier = null;
+		updateBoundingBox();
 	}
 	
 	/**
@@ -70,6 +72,7 @@ public class Hand {
 	public CardOperation placeCards(CardHolder consumer) {
 		var moveOperation = new CardMoveOperation(getCards(), supplier, consumer);
 		cards.clear();
+		updateBoundingBox();
 		return moveOperation;
 	}
 	
@@ -90,14 +93,18 @@ public class Hand {
 	 */
 	public void moveCards(float x, float y) {
 		cards.keySet().forEach(card -> card.getPosition().add(x, y));
-		var cardArray = cards.keySet().toArray(new Card[0]);
-		if (cardArray.length == 0) {
-			return;
+		updateBoundingBox();
+	}
+	
+	private void updateBoundingBox() {
+		var cardList = getCards();
+		if (cardList.isEmpty()) {
+			boundingBox.setMin(0, 0).setMax(0, 0);
+		} else {
+			var lastCard = cardList.getLast();
+			boundingBox.setMin(cardList.getFirst().getPosition())
+			.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
 		}
-		var lastCard = cardArray[cardArray.length - 1];
-		boundingBox.setMin(cardArray[0].getPosition())
-		.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
-		boundingBox.scale(0.75f, boundingBox.maxX - (boundingBox.lengthX() / 2f), boundingBox.maxY - (boundingBox.lengthY() / 2f));
 	}
 	
 	/**
