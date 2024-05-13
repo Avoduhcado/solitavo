@@ -12,7 +12,7 @@ public class Card {
 	
 	private static final Vector4f TEXTURE_OFFSET = new Vector4f();
 	
-	private static int CARD_BACK = 4;
+	private static int cardBack = 4;
 
 	private final Vector2f position;
 	private final Vector2f size;
@@ -91,7 +91,7 @@ public class Card {
 	}
 	
 	private void updateBoundingBox() {
-		boundingBox.setMin(position).setMax(position.x + size.x, position.y + size.y);
+		boundingBox.setMin(position.x, position.y).setMax(position.x + size.x, position.y + size.y);
 	}
 
 	/**
@@ -132,10 +132,20 @@ public class Card {
 	 * @return
 	 */
 	public Vector4f computeTextureOffset(TextureAtlas atlas) {
-		TEXTURE_OFFSET.set((float) (isFaceUp() ? getRank().ordinal() : CARD_BACK) / Rank.values().length,
+		TEXTURE_OFFSET.set((float) (isFaceUp() ? getRank().ordinal() : cardBack) / Rank.values().length,
 				(float) (isFaceUp() ? getSuit().ordinal() : Suit.BONUS.ordinal()) / Suit.values().length,
 				1f / atlas.getColumns(), 1f / atlas.getRows());
 		return TEXTURE_OFFSET;
+	}
+	
+	/**
+	 * @param cardBack
+	 */
+	public static void setCardBack(int cardBack) {
+		if (cardBack < 0 || cardBack > 13) {
+			return;
+		}
+		Card.cardBack = cardBack;
 	}
 	
 }

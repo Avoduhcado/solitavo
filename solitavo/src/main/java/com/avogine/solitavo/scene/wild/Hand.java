@@ -3,6 +3,7 @@ package com.avogine.solitavo.scene.wild;
 import java.util.*;
 
 import org.joml.Vector2f;
+import org.joml.primitives.Rectanglef;
 
 import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
@@ -20,11 +21,14 @@ public class Hand {
 	
 	private CardHolder supplier;
 	
+	private final Rectanglef boundingBox;
+	
 	/**
 	 * 
 	 */
 	public Hand() {
 		cards = new LinkedHashMap<>();
+		boundingBox = new Rectanglef();
 	}
 	
 	/**
@@ -38,6 +42,7 @@ public class Hand {
 		} catch (CloneNotSupportedException e) {
 			AvoLog.log().error("Failed to clone card position.", e);
 		}
+		updateBoundingBox();
 	}
 	
 	/**
@@ -57,6 +62,7 @@ public class Hand {
 		cards.forEach(Card::setPosition);
 		cards.clear();
 		supplier = null;
+		updateBoundingBox();
 	}
 	
 	/**
@@ -66,6 +72,7 @@ public class Hand {
 	public CardOperation placeCards(CardHolder consumer) {
 		var moveOperation = new CardMoveOperation(getCards(), supplier, consumer);
 		cards.clear();
+		updateBoundingBox();
 		return moveOperation;
 	}
 	
@@ -86,6 +93,18 @@ public class Hand {
 	 */
 	public void moveCards(float x, float y) {
 		cards.keySet().forEach(card -> card.getPosition().add(x, y));
+		updateBoundingBox();
+	}
+	
+	private void updateBoundingBox() {
+		var cardList = getCards();
+		if (cardList.isEmpty()) {
+			boundingBox.setMin(0, 0).setMax(0, 0);
+		} else {
+			var lastCard = cardList.getLast();
+			boundingBox.setMin(cardList.getFirst().getPosition())
+			.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
+		}
 	}
 	
 	/**
@@ -108,6 +127,13 @@ public class Hand {
 	 */
 	public int getHeldCount() {
 		return cards.size();
+	}
+	
+	/**
+	 * @return
+	 */
+	public Rectanglef getBoundingBox() {
+		return boundingBox;
 	}
 	
 	/**

@@ -21,12 +21,14 @@ import org.lwjgl.glfw.GLFW;
 
 import com.avogine.game.Game;
 import com.avogine.game.scene.Scene;
+import com.avogine.game.ui.nuklear.DebugInfo;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
 import com.avogine.io.listener.*;
 import com.avogine.render.data.TextureAtlas;
 import com.avogine.render.loader.texture.TextureCache;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
+import com.avogine.solitavo.scene.wild.Stock.DrawMode;
 import com.avogine.solitavo.scene.wild.cards.*;
 import com.avogine.solitavo.scene.wild.command.*;
 import com.avogine.solitavo.scene.wild.util.CardStack;
@@ -48,6 +50,8 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	
 	private final Vector2f lastMouse = new Vector2f();
 	
+	private DrawMode stockDraw = DrawMode.STANDARD;
+	
 	private final ArrayDeque<CardOperation> operations = new ArrayDeque<>();
 	
 	private final Random random = new Random();
@@ -59,16 +63,23 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		spriteRenderer = new SpriteRenderer();
 		
 		game.register(spriteRenderer);
+		game.register(new DebugInfo());
 		
 		game.addInputListener(this);
 		
 		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
 		
-		setupTable(8675309343L ^ System.currentTimeMillis());
+		setupTable(random.nextLong());
 	}
 	
 	private void setupTable(long seed) {
 		this.seed = seed;
+		random.setSeed(seed);
+		
+		setupTable();
+	}
+	
+	private void setupTable() {
 		List<Card> cards = new ArrayList<>();
 		for (int i = 0; i < 52; i++) {
 			cards.add(new Card(new Vector2f(), new Vector2f(72f, 100f), Rank.values()[i % 13], Suit.values()[i / 13]));
@@ -76,7 +87,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		random.setSeed(seed);
 		Collections.shuffle(cards, random);
 		
-		stock = new Stock();
+		stock = new Stock(stockDraw);
 		stock.addCards(cards);
 		
 		waste = new Waste();
@@ -92,12 +103,14 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		}
 		for (int x = 0; x < 7; x++) {
 			for (int y = x; y < 7; y++) {
-				tableau[y].dealCard(stock.getCardsToDraw().removeLast());
+				tableau[y].dealCard(stock.getCards().removeLast());
 			}
 			tableau[x].revealTopCard();
 		}
 		
 		hand = new Hand();
+		
+		operations.clear();
 	}
 	
 	// Debug
@@ -152,7 +165,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		event.transformPoint(projection);
 		
 		if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
-			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), CardStack.concatWithStream(foundations, tableau))
+			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), List.of(CardStack.concatArrays(foundations, tableau)))
 					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(List.of(card), waste, cardStack))));
 		} else if (Stream.of(foundations).anyMatch(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())) {
 			Stream.of(foundations)
@@ -164,7 +177,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			Stream.of(tableau)
 			.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())
 			.findFirst()
-			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), CardStack.concatWithStream(foundations, tableau))
+			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), List.of(CardStack.concatArrays(foundations, tableau)))
 					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile, cardStack))));
 		}
 	}
@@ -203,7 +216,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			return;
 		}
 		Stream.of(foundations)
-		.filter(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.canStack(hand.getCards()))
+		.filter(foundation -> foundation.getBoundingBox().intersectsRectangle(hand.getBoundingBox()) && foundation.canStack(hand.getCards()))
 		.findFirst()
 		.ifPresent(foundation -> executeOperation(hand.placeCards(foundation)));
 		
@@ -211,7 +224,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			return;
 		}
 		Stream.of(tableau)
-		.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && pile.canStack(hand.getCards()))
+		.filter(pile -> pile.getBoundingBox().intersectsRectangle(hand.getBoundingBox()) && pile.canStack(hand.getCards()))
 		.findFirst()
 		.ifPresent(pile -> executeOperation(hand.placeCards(pile)));
 
@@ -219,7 +232,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			hand.removeCards();
 		}
 	}
-
+	
 	@Override
 	public void mouseMoved(MouseEvent event) {
 		// Not Implemented
@@ -244,9 +257,21 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 
 	@Override
 	public void keyReleased(KeyEvent event) {
+		if (hand.isHolding()) {
+			// Don't perform undo operations while holding a card, likely unnecessary for setupTable but good to avoid for now.
+			return;
+		}
 		switch (event.key) {
-			case GLFW.GLFW_KEY_F -> undoOperation();
-			case GLFW.GLFW_KEY_X -> setupTable(seed);
+			case GLFW.GLFW_KEY_Z -> undoOperation();
+			case GLFW.GLFW_KEY_Q -> setupTable();
+			case GLFW.GLFW_KEY_E -> setupTable(random.nextLong());
+			case GLFW.GLFW_KEY_0 -> Card.setCardBack(0);
+			case GLFW.GLFW_KEY_3 -> Card.setCardBack(3);
+			case GLFW.GLFW_KEY_4 -> Card.setCardBack(4);
+			case GLFW.GLFW_KEY_5 -> Card.setCardBack(5);
+			case GLFW.GLFW_KEY_6 -> Card.setCardBack(6);
+			case GLFW.GLFW_KEY_7 -> Card.setCardBack(7);
+			case GLFW.GLFW_KEY_1 -> stockDraw = (stockDraw == DrawMode.STANDARD ? DrawMode.SINGLE : DrawMode.STANDARD);
 			default -> {
 				// Unbound key
 			}
