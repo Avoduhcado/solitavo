@@ -15,7 +15,7 @@ public interface CardStack extends CardHolder {
 	 * @return
 	 */
 	public boolean canStack(List<Card> cards);
-
+	
 	/**
 	 * @param array1
 	 * @param array2
