@@ -68,10 +68,10 @@ public class Waste implements CardHolder {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRenderer renderer, TextureAtlas texture) {
 		cards.stream()
 		.dropWhile(card -> cards.indexOf(card) < cards.size() - 3)
-		.forEach(card -> renderer.drawSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
 	}
 	
 	private void splayCards() {
@@ -94,8 +94,9 @@ public class Waste implements CardHolder {
 	}
 	
 	/**
-	 * @return
+	 * Returns specifically the bounds of the top card revealed in the waste when the waste is not empty.
 	 */
+	@Override
 	public Rectanglef getBoundingBox() {
 		if (cards.isEmpty()) {
 			return boundingBox;

@@ -78,12 +78,12 @@ public class Stock implements CardHolder {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRenderer renderer, TextureAtlas texture) {
 		if (cards.isEmpty()) {
-			renderer.drawSprite(position, size, texture.getId(), blankCardOffset);
+			renderer.renderSprite(position, size, texture.getId(), blankCardOffset);
 		} else {
 			var topCard = cards.getLast();
-			renderer.drawSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture));
+			renderer.renderSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture));
 		}
 	}
 	
@@ -101,10 +101,7 @@ public class Stock implements CardHolder {
 		return cards;
 	}
 	
-	/**
-	 * 
-	 * @return
-	 */
+	@Override
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
 	}

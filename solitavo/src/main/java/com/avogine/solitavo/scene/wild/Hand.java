@@ -10,7 +10,8 @@ import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.cards.Card;
 import com.avogine.solitavo.scene.wild.command.*;
-import com.avogine.solitavo.scene.wild.util.*;
+import com.avogine.solitavo.scene.wild.util.CardHolder;
+import com.avogine.util.Pair;
 
 /**
  *
@@ -46,6 +47,13 @@ public class Hand {
 	}
 	
 	/**
+	 * @param cardAndSupplierPair
+	 */
+	public void holdCard(Pair<Card, CardHolder> cardAndSupplierPair) {
+		holdCard(cardAndSupplierPair.first(), cardAndSupplierPair.second());
+	}
+	
+	/**
 	 * @param cards
 	 * @param supplier 
 	 */
@@ -53,6 +61,13 @@ public class Hand {
 		for (Card card : cards) {
 			holdCard(card, supplier);
 		}
+	}
+	
+	/**
+	 * @param cardsAndSupplierPair
+	 */
+	public void holdCards(Pair<List<Card>, CardHolder> cardsAndSupplierPair) {
+		holdCards(cardsAndSupplierPair.first(), cardsAndSupplierPair.second());
 	}
 	
 	/**
@@ -77,21 +92,10 @@ public class Hand {
 	}
 	
 	/**
-	 * @param cards
-	 * @param consumers 
-	 * @return 
-	 */
-	public Optional<CardStack> autoPlaceCard(List<Card> cards, List<CardStack> consumers) {
-		return consumers.stream()
-		.filter(consumer -> consumer.canStack(cards))
-		.findFirst();
-	}
-	
-	/**
 	 * @param x
 	 * @param y
 	 */
-	public void moveCards(float x, float y) {
+	public void move(float x, float y) {
 		cards.keySet().forEach(card -> card.getPosition().add(x, y));
 		updateBoundingBox();
 	}
@@ -111,15 +115,15 @@ public class Hand {
 	 * @param render
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer render, TextureAtlas texture) {
-		cards.keySet().forEach(card -> render.drawSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+	public void render(SpriteRenderer render, TextureAtlas texture) {
+		cards.keySet().forEach(card -> render.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
 	}
 	
 	/**
 	 * @return
 	 */
-	public boolean isHolding() {
-		return !cards.isEmpty();
+	public boolean isEmpty() {
+		return cards.isEmpty();
 	}
 	
 	/**
@@ -141,6 +145,13 @@ public class Hand {
 	 */
 	public List<Card> getCards() {
 		return cards.keySet().stream().toList();
+	}
+	
+	/**
+	 * @return
+	 */
+	public CardHolder getSupplier() {
+		return supplier;
 	}
 	
 }

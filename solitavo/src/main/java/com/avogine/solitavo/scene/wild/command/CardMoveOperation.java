@@ -64,6 +64,11 @@ public class CardMoveOperation implements CardOperation {
 			origin.addCards(destination.removeCards(cards));
 		}
 	}
+
+	@Override
+	public boolean incrementsMoves() {
+		return true;
+	}
 	
 	@Override
 	public void describe() {

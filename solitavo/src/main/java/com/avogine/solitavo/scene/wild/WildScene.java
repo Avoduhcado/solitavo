@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import org.joml.Vector2f;
+import org.joml.primitives.Rectanglef;
 import org.lwjgl.glfw.GLFW;
 
 import com.avogine.game.Game;
@@ -31,7 +32,8 @@ import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.Stock.DrawMode;
 import com.avogine.solitavo.scene.wild.cards.*;
 import com.avogine.solitavo.scene.wild.command.*;
-import com.avogine.solitavo.scene.wild.util.CardStack;
+import com.avogine.solitavo.scene.wild.util.*;
+import com.avogine.util.Pair;
 
 /**
  *
@@ -47,6 +49,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	private Foundation[] foundations;
 	private Pile[] tableau;
 	private Hand hand;
+	
+	private final Rectanglef foundationsBounds = new Rectanglef();
+	private final Rectanglef tableauBounds = new Rectanglef();
 	
 	private final Vector2f lastMouse = new Vector2f();
 	
@@ -96,6 +101,8 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		for (int i = 0; i < foundations.length; i++) {
 			foundations[i] = new Foundation(i);
 		}
+		foundationsBounds.set(foundations[0].getBoundingBox());
+		computeFoundationBounds();
 		
 		tableau = new Pile[7];
 		for (int i = 0; i < tableau.length; i++) {
@@ -107,10 +114,114 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			}
 			tableau[x].revealTopCard();
 		}
+		tableauBounds.set(tableau[0].getBoundingBox());
+		computeTableauBounds();
 		
 		hand = new Hand();
 		
 		operations.clear();
+	}
+
+	private Rectanglef computeFoundationBounds() {
+		foundationsBounds.setMin(foundationsBounds.minX, foundationsBounds.minY).setMax(foundationsBounds.minX, foundationsBounds.minY);
+		for (var stack : foundations) {
+			foundationsBounds.union(stack.getBoundingBox());
+		}
+		return foundationsBounds;
+	}
+	
+	private Rectanglef computeTableauBounds() {
+		tableauBounds.setMin(tableauBounds.minX, tableauBounds.minY).setMax(tableauBounds.minX, tableauBounds.minY);
+		for (var pile : tableau) {
+			tableauBounds.union(pile.getBoundingBox());
+		}
+		return tableauBounds;
+	}
+
+	private void executeOperation(CardOperation operation) {
+		operations.add(operation);
+		operation.execute();
+		
+		computeFoundationBounds();
+		computeTableauBounds();
+	}
+	
+	private void undoOperation() {
+		if (operations.peekLast() != null) {
+//			operations.peekLast().describe();
+			operations.pollLast().rollback();
+			
+			computeFoundationBounds();
+			computeTableauBounds();
+		}
+	}
+
+	/**
+	 * Returns an optional {@link CardOperation} for what cards to move when the {@link Stock} is clicked.
+	 * 
+	 * If the Stock is not empty the {@link CardOperation} will move up to the selected {@link DrawMode} number of cards into the {@link Waste}. In the case that the Stock is empty,
+	 * but there are cards in the {@link Waste} the {@link CardOperation} will recycle the Waste cards into the Stock. If both the Stock and Waste are empty then the optional will
+	 * also be empty.
+	 * 
+	 * @return A {@link CardOperation} for what cards to move when the {@link Stock} is clicked. 
+	 */
+	private Optional<CardOperation> getOperationForStockClick() {
+		var stockCards = stock.getCardsToDraw();
+		if (stockCards.isEmpty()) {
+			if (waste.getCard().isPresent()) {
+				return Optional.of(new CardMoveOperation(waste.getRecycleCards(), waste, stock, true));
+			} else {
+				return Optional.empty();
+			}
+		}
+		
+		return Optional.of(new CardMoveOperation(stockCards, stock, waste, true));
+	}
+	
+	private Optional<CardOperation> getOperationForWasteClick() {
+		var wasteCard = waste.getCard();
+		if (wasteCard.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		List<Card> wasteCardList = List.of(wasteCard.get());
+		var destinationStack = getAutoDestinationStackForCards(wasteCardList);
+		if (destinationStack.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		return Optional.of(new CardMoveOperation(wasteCardList, waste, destinationStack.get()));
+	}
+	
+	private Optional<CardOperation> getOperationForTableauClick() {
+		var tableauCardsAndPile = Stream.of(tableau)
+				.filter(pile -> !pile.isEmpty() && pile.getBoundingBox().containsPoint(lastMouse))
+				.map(pile -> new Pair<List<Card>, CardHolder>(pile.getCardsFromPoint(lastMouse), pile))
+				.findFirst();
+		if (tableauCardsAndPile.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		List<Card> tableauCards = tableauCardsAndPile.get().first();
+		CardHolder tableauPile = tableauCardsAndPile.get().second();
+		var destinationStack = getAutoDestinationStackForCards(tableauCards);
+		if (destinationStack.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		return Optional.of(new CardMoveOperation(tableauCards, tableauPile, destinationStack.get()));
+	}
+	
+	private Optional<CardStack> getAutoDestinationStackForCards(List<Card> cards) {
+		return Stream.concat(Arrays.stream(foundations), Arrays.stream(tableau))
+				.filter(consumer -> consumer.canStack(cards))
+				.findFirst();
+	}
+	
+	private Optional<CardStack> getDestinationStackForCards(List<Card> cards) {
+		return Stream.concat(Arrays.stream(foundations), Arrays.stream(tableau))
+				.filter(consumer -> consumer.getBoundingBox().intersectsRectangle(hand.getBoundingBox()) && consumer.canStack(cards))
+				.findFirst();
 	}
 	
 	// Debug
@@ -132,53 +243,36 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		glClearColor(36f / 255f, 115f / 255f, 69f / 255f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		stock.draw(spriteRenderer, texture);
-		waste.draw(spriteRenderer, texture);
+		stock.render(spriteRenderer, texture);
+		waste.render(spriteRenderer, texture);
 		for (Foundation foundation : foundations) {
-			foundation.draw(spriteRenderer, texture);
+			foundation.render(spriteRenderer, texture);
 		}
 		for (Pile pile : tableau) {
-			pile.draw(spriteRenderer, texture);
+			pile.render(spriteRenderer, texture);
 		}
 		
-		hand.draw(spriteRenderer, texture);
+		hand.render(spriteRenderer, texture);
 		
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 	}
 	
-	private void executeOperation(CardOperation operation) {
-		operations.add(operation);
-		operation.execute();
-	}
-	
-	private void undoOperation() {
-		if (operations.peekLast() != null) {
-//			operations.peekLast().describe();
-			operations.pollLast().rollback();
-		}
-	}
-	
 	@Override
 	public void mouseClicked(MouseEvent event) {
 		event.transformPoint(projection);
+		lastMouse.set(event.mouseX, event.mouseY);
 		
-		if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
-			waste.getCard().ifPresent(card -> hand.autoPlaceCard(List.of(card), List.of(CardStack.concatArrays(foundations, tableau)))
-					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(List.of(card), waste, cardStack))));
-		} else if (Stream.of(foundations).anyMatch(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())) {
-			Stream.of(foundations)
-			.filter(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())
-			.findFirst()
-			.ifPresent(foundation -> hand.autoPlaceCard(List.of(foundation.getTopCard().get()), List.of(tableau))
-					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(List.of(foundation.getTopCard().get()), foundation, cardStack))));
-		} else if (Stream.of(tableau).anyMatch(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())) {
-			Stream.of(tableau)
-			.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())
-			.findFirst()
-			.ifPresent(pile -> hand.autoPlaceCard(pile.getCardsFromPoint(event.mouseX, event.mouseY), List.of(CardStack.concatArrays(foundations, tableau)))
-					.ifPresent(cardStack -> executeOperation(new CardMoveOperation(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile, cardStack))));
+		if (stock.getBoundingBox().containsPoint(lastMouse)) {
+			Optional<CardOperation> stockClickOperation = getOperationForStockClick();
+			stockClickOperation.ifPresent(this::executeOperation);
+		} else if (waste.getBoundingBox().containsPoint(lastMouse)) {
+			Optional<CardOperation> wasteClickOperation = getOperationForWasteClick();
+			wasteClickOperation.ifPresent(this::executeOperation);
+		} else if (tableauBounds.containsPoint(lastMouse)) {
+			Optional<CardOperation> tableauClickOperation = getOperationForTableauClick();
+			tableauClickOperation.ifPresent(this::executeOperation);
 		}
 	}
 	
@@ -187,50 +281,37 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		event.transformPoint(projection);
 		lastMouse.set(event.mouseX, event.mouseY);
 		
-		if (stock.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
-			if (stock.getCardsToDraw().isEmpty()) {
-				executeOperation(new CardMoveOperation(waste.getRecycleCards(), waste, stock, true));
-			} else {
-				executeOperation(new CardMoveOperation(stock.getCardsToDraw(), stock, waste, true));
-			}
-		} else if (waste.getBoundingBox().containsPoint(event.mouseX, event.mouseY)) {
+		if (waste.getBoundingBox().containsPoint(lastMouse)) {
 			waste.getCard().ifPresent(card -> hand.holdCard(card, waste));
-		} else if (Stream.of(foundations).anyMatch(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())) {
+		} else if (foundationsBounds.containsPoint(lastMouse)) {
 			Stream.of(foundations)
-			.filter(foundation -> foundation.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && foundation.getTopCard().isPresent())
+			.filter(foundation -> !foundation.isEmpty() && foundation.getBoundingBox().containsPoint(lastMouse))
+			.map(foundation -> new Pair<Card, CardHolder>(foundation.getTopCard().get(), foundation))
 			.findFirst()
-			.ifPresent(foundation -> hand.holdCard(foundation.getTopCard().get(), foundation));
-		} else if (Stream.of(tableau).anyMatch(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())) {
+			.ifPresent(hand::holdCard);
+		} else if (tableauBounds.containsPoint(lastMouse)) {
 			Stream.of(tableau)
-			.filter(pile -> pile.getBoundingBox().containsPoint(event.mouseX, event.mouseY) && !pile.isEmpty())
+			.filter(pile -> !pile.isEmpty() && pile.getBoundingBox().containsPoint(lastMouse))
+			.map(pile -> new Pair<List<Card>, CardHolder>(pile.getCardsFromPoint(lastMouse), pile))
 			.findFirst()
-			.ifPresent(pile -> hand.holdCards(pile.getCardsFromPoint(event.mouseX, event.mouseY), pile));
+			.ifPresent(hand::holdCards);
 		}
 	}
-
+	
 	@Override
 	public void mouseReleased(MouseEvent event) {
-		event.transformPoint(projection);
-		
-		if (!hand.isHolding()) {
+		if (hand.isEmpty()) {
 			return;
 		}
-		Stream.of(foundations)
-		.filter(foundation -> foundation.getBoundingBox().intersectsRectangle(hand.getBoundingBox()) && foundation.canStack(hand.getCards()))
-		.findFirst()
-		.ifPresent(foundation -> executeOperation(hand.placeCards(foundation)));
 		
-		if (!hand.isHolding()) {
-			return;
-		}
-		Stream.of(tableau)
-		.filter(pile -> pile.getBoundingBox().intersectsRectangle(hand.getBoundingBox()) && pile.canStack(hand.getCards()))
-		.findFirst()
-		.ifPresent(pile -> executeOperation(hand.placeCards(pile)));
-
-		if (hand.isHolding()) {
+		Optional<CardStack> destinationStack = getDestinationStackForCards(hand.getCards());
+		if (destinationStack.isEmpty() || destinationStack.get() == hand.getSupplier()) {
 			hand.removeCards();
+			return;
 		}
+		
+		CardOperation placeCardsOperation = hand.placeCards(destinationStack.get());
+		executeOperation(placeCardsOperation);
 	}
 	
 	@Override
@@ -241,10 +322,10 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	@Override
 	public void mouseDragged(MouseEvent event) {
 		event.transformPoint(projection);
-		if (hand.isHolding()) {
+		if (!hand.isEmpty()) {
 			float x = event.mouseX;
 			float y = event.mouseY;
-			hand.moveCards(x - lastMouse.x, y - lastMouse.y);
+			hand.move(x - lastMouse.x, y - lastMouse.y);
 			
 			lastMouse.set(x, y);
 		}
@@ -257,7 +338,7 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 
 	@Override
 	public void keyReleased(KeyEvent event) {
-		if (hand.isHolding()) {
+		if (!hand.isEmpty()) {
 			// Don't perform undo operations while holding a card, likely unnecessary for setupTable but good to avoid for now.
 			return;
 		}

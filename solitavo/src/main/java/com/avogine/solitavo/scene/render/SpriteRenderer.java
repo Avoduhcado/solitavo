@@ -69,7 +69,7 @@ public class SpriteRenderer implements Cleanupable {
 	 * @param textureID
 	 * @param textureOffset
 	 */
-	public void drawSprite(Vector2f position, Vector2f size, float rotation, float scale, int textureID, Vector4f textureOffset) {
+	public void renderSprite(Vector2f position, Vector2f size, float rotation, float scale, int textureID, Vector4f textureOffset) {
 		spriteShader.bind();
 		
 		Matrix4f modelMatrix = new Matrix4f();
@@ -101,8 +101,8 @@ public class SpriteRenderer implements Cleanupable {
 	 * @param textureId
 	 * @param textureOffset
 	 */
-	public void drawSprite(Vector2f position, Vector2f size, int textureId, Vector4f textureOffset) {
-		drawSprite(position, size, 0, 1, textureId, textureOffset);
+	public void renderSprite(Vector2f position, Vector2f size, int textureId, Vector4f textureOffset) {
+		renderSprite(position, size, 0, 1, textureId, textureOffset);
 	}
 
 	@Override

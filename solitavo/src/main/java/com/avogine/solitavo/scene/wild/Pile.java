@@ -53,7 +53,7 @@ public class Pile implements CardStack {
 	 * @param faceUp 
 	 */
 	public void revealTopCard(boolean faceUp) {
-		if (cards.isEmpty()) {
+		if (isEmpty()) {
 			return;
 		}
 		cards.getLast().setFaceUp(faceUp);
@@ -89,7 +89,7 @@ public class Pile implements CardStack {
 				.dropWhile(card -> !card.isFaceUp())
 				.findFirst()
 				.ifPresentOrElse(card -> faceUpBounds.setMin(card.getPosition()), () -> faceUpBounds.setMin(position));
-		if (cards.isEmpty()) {
+		if (isEmpty()) {
 			faceUpBounds.setMax(boundingBox.maxX, boundingBox.maxY);
 		} else {
 			faceUpBounds.setMax(cards.getLast().getBoundingBox().maxX, cards.getLast().getBoundingBox().maxY);
@@ -111,12 +111,19 @@ public class Pile implements CardStack {
 		return cascade;
 	}
 	
-
+	/**
+	 * @param point
+	 * @return
+	 */
+	public List<Card> getCardsFromPoint(Vector2f point) {
+		return getCardsFromPoint(point.x, point.y);
+	}
+	
 	@Override
 	public boolean canStack(List<Card> cards) {
-		if (this.cards.isEmpty() && cards.getFirst().getRank() == Rank.KING) {
+		if (isEmpty() && cards.getFirst().getRank() == Rank.KING) {
 			return true;
-		} else if (!this.cards.isEmpty()) {
+		} else if (!isEmpty()) {
 			Card topCard = this.cards.getLast();
 			Card firstHeldCard = cards.getFirst();
 			return Suit.isOpposite(topCard.getSuit(), firstHeldCard.getSuit()) && topCard.getRank().ordinal() - firstHeldCard.getRank().ordinal() == 1;
@@ -128,15 +135,15 @@ public class Pile implements CardStack {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer renderer, TextureAtlas texture) {
-		if (cards.isEmpty()) {
+	public void render(SpriteRenderer renderer, TextureAtlas texture) {
+		if (isEmpty()) {
 			return;
 		}
-		cards.forEach(card -> renderer.drawSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		cards.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
 	}
 	
 	private float getVerticalOffset() {
-		var previousCard = cards.isEmpty() ? null : cards.getLast();
+		var previousCard = isEmpty() ? null : cards.getLast();
 		if (previousCard == null) {
 			return position.y;
 		} else if (previousCard.isFaceUp()) {
@@ -170,10 +177,11 @@ public class Pile implements CardStack {
 	}
 	
 	/**
-	 * @return the boundingBox
+	 * Returns specifically the union of the bounds of the face up cards in this pile when the pile is not empty.
 	 */
+	@Override
 	public Rectanglef getBoundingBox() {
-		if (cards.isEmpty()) {
+		if (isEmpty()) {
 			return boundingBox;
 		} else {
 			return faceUpBounds;
