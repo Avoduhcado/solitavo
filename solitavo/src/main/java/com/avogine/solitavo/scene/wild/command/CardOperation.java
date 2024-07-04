@@ -14,6 +14,13 @@ public interface CardOperation {
 	 * 
 	 */
 	public void rollback();
+
+	/**
+	 * @return True if this operation should increment the game's total moves counter.
+	 */
+	public default boolean incrementsMoves() {
+		return false;
+	}
 	
 	/**
 	 * 

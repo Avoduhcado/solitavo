@@ -26,13 +26,14 @@ public class Foundation implements CardStack {
 	private final Vector4f blankCardOffset;
 	
 	/**
-	 * @param index 
+	 * @param position 
+	 * @param size 
 	 */
-	public Foundation(int index) {
+	public Foundation(Vector2f position, Vector2f size) {
 		stack = new ArrayList<>();
-		position = new Vector2f((72f * 3) + index * 72f, 0f);
-		size = new Vector2f(72f, 100f);
-		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
+		this.position = position;
+		this.size = size;
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
 		blankCardOffset = new Vector4f(
 				(float) Rank.KING.ordinal() / Rank.values().length,
 				(float) Suit.BONUS.ordinal() / Suit.values().length,
@@ -59,10 +60,10 @@ public class Foundation implements CardStack {
 	}
 	
 	/**
-	 * @return
+	 * @return the {@link Card} at the top of this stack if this stack is not empty.
 	 */
 	public Optional<Card> getTopCard() {
-		if (stack.isEmpty()) {
+		if (isEmpty()) {
 			return Optional.empty();
 		}
 		return Optional.of(stack.getLast());
@@ -72,25 +73,25 @@ public class Foundation implements CardStack {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer renderer, TextureAtlas texture) {
-		if (!stack.isEmpty()) {
+	public void render(SpriteRenderer renderer, TextureAtlas texture) {
+		if (!isEmpty()) {
 			if (stack.size() == 1) {
-				renderer.drawSprite(position, size, texture.getId(), blankCardOffset);
+				renderer.renderSprite(position, size, texture.getId(), blankCardOffset);
 			} else {
 				var secondTopCard = stack.get(stack.size() - 2);
-				renderer.drawSprite(secondTopCard.getPosition(), secondTopCard.getSize(), texture.getId(), secondTopCard.computeTextureOffset(texture));
+				renderer.renderSprite(secondTopCard.getPosition(), secondTopCard.getSize(), texture.getId(), secondTopCard.computeTextureOffset(texture));
 			}
 		}
 		getTopCard().ifPresentOrElse(
-				topCard -> renderer.drawSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture)),
-				() -> renderer.drawSprite(position, size, texture.getId(), blankCardOffset));
+				topCard -> renderer.renderSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture)),
+				() -> renderer.renderSprite(position, size, texture.getId(), blankCardOffset));
 	}
 	
 	@Override
 	public boolean canStack(List<Card> cards) {
 		if (cards.size() != 1) {
 			return false;
-		} else if (stack.isEmpty()) {
+		} else if (isEmpty()) {
 			return cards.getFirst().getRank() == Rank.ACE;
 		} else {
 			Card topCard = stack.getLast();
@@ -100,8 +101,13 @@ public class Foundation implements CardStack {
 	}
 	
 	/**
-	 * @return the boundingBox
+	 * @return True if there are no {@link Card}s in this stack.
 	 */
+	public boolean isEmpty() {
+		return stack.isEmpty();
+	}
+	
+	@Override
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
 	}

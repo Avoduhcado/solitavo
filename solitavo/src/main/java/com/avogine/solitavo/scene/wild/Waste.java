@@ -20,18 +20,17 @@ public class Waste implements CardHolder {
 	
 	private final Vector2f position;
 	
-	private final Vector2f size;
-	
 	private final Rectanglef boundingBox;
 	
 	/**
+	 * @param position 
+	 * @param size 
 	 * 
 	 */
-	public Waste() {
+	public Waste(Vector2f position, Vector2f size) {
 		cards = new ArrayList<>();
-		position = new Vector2f(72f, 0f);
-		size = new Vector2f(72f, 100f);
-		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
+		this.position = position;
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.x + size.y);
 	}
 	
 	@Override
@@ -68,10 +67,10 @@ public class Waste implements CardHolder {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void draw(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRenderer renderer, TextureAtlas texture) {
 		cards.stream()
 		.dropWhile(card -> cards.indexOf(card) < cards.size() - 3)
-		.forEach(card -> renderer.drawSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
 	}
 	
 	private void splayCards() {
@@ -79,7 +78,7 @@ public class Waste implements CardHolder {
 		var topCards = cards.subList(Math.max(0, cards.size() - 3), cards.size());
 		for (int i = 0; i < topCards.size(); i++) {
 			topCards.get(i).setFaceUp(true);
-			topCards.get(i).setPosition(position.x + (i * 18), 0);
+			topCards.get(i).setPosition(position.x + (i * 18), position.y);
 		}
 	}
 	
@@ -94,8 +93,9 @@ public class Waste implements CardHolder {
 	}
 	
 	/**
-	 * @return
+	 * Returns specifically the bounds of the top card revealed in the waste when the waste is not empty.
 	 */
+	@Override
 	public Rectanglef getBoundingBox() {
 		if (cards.isEmpty()) {
 			return boundingBox;
