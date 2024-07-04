@@ -219,11 +219,38 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		return Optional.of(new CardMoveOperation(wasteCardList, waste, destinationStack.get()));
 	}
 	
-	private Optional<CardOperation> getOperationForTableauClick() {
-		var tableauCardsAndPile = Stream.of(tableau)
+	private Optional<Pair<Card, CardHolder>> getSelectedFoundation() {
+		return Stream.of(foundations)
+				.filter(foundation -> !foundation.isEmpty() && foundation.getBoundingBox().containsPoint(lastMouse))
+				.map(foundation -> new Pair<Card, CardHolder>(foundation.getTopCard().get(), foundation))
+				.findFirst();
+	}
+	
+	private Optional<CardOperation> getOperationForFoundationClick() {
+		var foundationCardAndStack = getSelectedFoundation();
+		if (foundationCardAndStack.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		List<Card> foundationCard = List.of(foundationCardAndStack.get().first());
+		CardHolder foundationStack = foundationCardAndStack.get().second();
+		var destinationStack = getAutoDestinationStackForCardsFrom(foundationCard, Arrays.stream(tableau));
+		if (destinationStack.isEmpty()) {
+			return Optional.empty();
+		}
+		
+		return Optional.of(new CardMoveOperation(foundationCard, foundationStack, destinationStack.get()));
+	}
+	
+	private Optional<Pair<List<Card>, CardHolder>> getSelectedTableau() {
+		return Stream.of(tableau)
 				.filter(pile -> !pile.isEmpty() && pile.getBoundingBox().containsPoint(lastMouse))
 				.map(pile -> new Pair<List<Card>, CardHolder>(pile.getCardsFromPoint(lastMouse), pile))
 				.findFirst();
+	}
+	
+	private Optional<CardOperation> getOperationForTableauClick() {
+		var tableauCardsAndPile = getSelectedTableau();
 		if (tableauCardsAndPile.isEmpty()) {
 			return Optional.empty();
 		}
@@ -238,10 +265,14 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		return Optional.of(new CardMoveOperation(tableauCards, tableauPile, destinationStack.get()));
 	}
 	
-	private Optional<CardStack> getAutoDestinationStackForCards(List<Card> cards) {
-		return Stream.concat(Arrays.stream(foundations), Arrays.stream(tableau))
+	private Optional<CardStack> getAutoDestinationStackForCardsFrom(List<Card> cards, Stream<CardStack> streamOfDestinations) {
+		return streamOfDestinations
 				.filter(consumer -> consumer.canStack(cards))
 				.findFirst();
+	}
+	
+	private Optional<CardStack> getAutoDestinationStackForCards(List<Card> cards) {
+		return getAutoDestinationStackForCardsFrom(cards, Stream.concat(Arrays.stream(foundations), Arrays.stream(tableau)));
 	}
 	
 	private Optional<CardStack> getDestinationStackForCards(List<Card> cards) {
@@ -299,6 +330,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		} else if (waste.getBoundingBox().containsPoint(lastMouse)) {
 			Optional<CardOperation> wasteClickOperation = getOperationForWasteClick();
 			wasteClickOperation.ifPresent(this::executeOperation);
+		} else if (foundationsBounds.containsPoint(lastMouse)) {
+			Optional<CardOperation> foundationClickOperation = getOperationForFoundationClick();
+			foundationClickOperation.ifPresent(this::executeOperation);
 		} else if (tableauBounds.containsPoint(lastMouse)) {
 			Optional<CardOperation> tableauClickOperation = getOperationForTableauClick();
 			tableauClickOperation.ifPresent(this::executeOperation);
@@ -313,17 +347,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		if (waste.getBoundingBox().containsPoint(lastMouse)) {
 			waste.getCard().ifPresent(card -> hand.holdCard(card, waste));
 		} else if (foundationsBounds.containsPoint(lastMouse)) {
-			Stream.of(foundations)
-			.filter(foundation -> !foundation.isEmpty() && foundation.getBoundingBox().containsPoint(lastMouse))
-			.map(foundation -> new Pair<Card, CardHolder>(foundation.getTopCard().get(), foundation))
-			.findFirst()
-			.ifPresent(hand::holdCard);
+			getSelectedFoundation().ifPresent(hand::holdCard);
 		} else if (tableauBounds.containsPoint(lastMouse)) {
-			Stream.of(tableau)
-			.filter(pile -> !pile.isEmpty() && pile.getBoundingBox().containsPoint(lastMouse))
-			.map(pile -> new Pair<List<Card>, CardHolder>(pile.getCardsFromPoint(lastMouse), pile))
-			.findFirst()
-			.ifPresent(hand::holdCards);
+			getSelectedTableau().ifPresent(hand::holdCards);
 		}
 	}
 	
