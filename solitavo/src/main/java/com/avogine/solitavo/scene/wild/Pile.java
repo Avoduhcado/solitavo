@@ -19,8 +19,6 @@ public class Pile implements CardStack {
 	
 	private final Vector2f position;
 	
-	private final Vector2f size;
-	
 	private final Rectanglef boundingBox;
 	
 	private final Rectanglef faceUpBounds;
@@ -29,16 +27,16 @@ public class Pile implements CardStack {
 	private final float faceUpOffset;
 	
 	/**
-	 * @param index 
+	 * @param position 
+	 * @param size 
 	 */
-	public Pile(int index) {
+	public Pile(Vector2f position, Vector2f size) {
 		cards = new ArrayList<>();
-		position = new Vector2f(index * 72f, 100f);
-		size = new Vector2f(72f, 100f);
-		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
+		this.position = position;
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
 		faceUpBounds = new Rectanglef(boundingBox);
-		faceDownOffset = 12f;
-		faceUpOffset = 20f;
+		faceDownOffset = size.y * 0.12f;
+		faceUpOffset = size.y * 0.2f;
 	}
 	
 	/**

@@ -29,12 +29,14 @@ public class Stock implements CardHolder {
 	private DrawMode drawMode;
 	
 	/**
+	 * @param position 
+	 * @param size 
 	 * @param drawMode 
 	 */
-	public Stock(DrawMode drawMode) {
+	public Stock(Vector2f position, Vector2f size, DrawMode drawMode) {
 		cards = new ArrayList<>();
-		position = new Vector2f(0f, 0f);
-		size = new Vector2f(72f, 100f);
+		this.position = position;
+		this.size = size;
 		boundingBox = new Rectanglef(position, size);
 		blankCardOffset = new Vector4f(
 				(float) Rank.THREE.ordinal() / Rank.values().length,
@@ -45,10 +47,12 @@ public class Stock implements CardHolder {
 	}
 	
 	/**
+	 * @param position 
+	 * @param size 
 	 * 
 	 */
-	public Stock() {
-		this(DrawMode.STANDARD);
+	public Stock(Vector2f position, Vector2f size) {
+		this(position, size, DrawMode.STANDARD);
 	}
 	
 	@Override

@@ -10,6 +10,10 @@ import com.avogine.render.data.TextureAtlas;
  */
 public class Card {
 	
+	/**
+	 * The default width and height of a card.
+	 */
+	public static final Vector2f DEFAULT_SIZE = new Vector2f(72f, 100f);
 	private static final Vector4f TEXTURE_OFFSET = new Vector4f();
 	
 	private static int cardBack = 4;
@@ -34,7 +38,7 @@ public class Card {
 		this.size = size;
 		this.rank = rank;
 		this.suit = suit;
-		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
 	}
 	
 	/**

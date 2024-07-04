@@ -26,13 +26,14 @@ public class Foundation implements CardStack {
 	private final Vector4f blankCardOffset;
 	
 	/**
-	 * @param index 
+	 * @param position 
+	 * @param size 
 	 */
-	public Foundation(int index) {
+	public Foundation(Vector2f position, Vector2f size) {
 		stack = new ArrayList<>();
-		position = new Vector2f((72f * 3) + index * 72f, 0f);
-		size = new Vector2f(72f, 100f);
-		boundingBox = new Rectanglef(position, position.add(size, new Vector2f()));
+		this.position = position;
+		this.size = size;
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
 		blankCardOffset = new Vector4f(
 				(float) Rank.KING.ordinal() / Rank.values().length,
 				(float) Suit.BONUS.ordinal() / Suit.values().length,

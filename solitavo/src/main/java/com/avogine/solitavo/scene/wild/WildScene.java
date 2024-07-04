@@ -22,11 +22,12 @@ import org.lwjgl.glfw.GLFW;
 
 import com.avogine.game.Game;
 import com.avogine.game.scene.Scene;
-import com.avogine.game.ui.nuklear.DebugInfo;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
 import com.avogine.io.listener.*;
-import com.avogine.render.data.TextureAtlas;
+import com.avogine.render.TextRenderer;
+import com.avogine.render.data.*;
+import com.avogine.render.loader.font.FontCache;
 import com.avogine.render.loader.texture.TextureCache;
 import com.avogine.solitavo.scene.render.SpriteRenderer;
 import com.avogine.solitavo.scene.wild.Stock.DrawMode;
@@ -41,6 +42,8 @@ import com.avogine.util.Pair;
 public class WildScene extends Scene implements MouseButtonListener, MouseMotionListener, KeyListener {
 	
 	private SpriteRenderer spriteRenderer;
+	
+	private TextRenderer textRenderer;
 	
 	private TextureAtlas texture;
 	
@@ -59,6 +62,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	
 	private final ArrayDeque<CardOperation> operations = new ArrayDeque<>();
 	
+	private FontDetails uiFont;
+	private int moveCounter;
+	
 	private final Random random = new Random();
 	private long seed;
 	
@@ -66,13 +72,16 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	public void init(Game game, Window window) {
 		projection.setOrtho2D(0, 504, 500, 0);
 		spriteRenderer = new SpriteRenderer();
+		textRenderer = new TextRenderer();
 		
 		game.register(spriteRenderer);
-		game.register(new DebugInfo());
+		game.register(textRenderer);
 		
 		game.addInputListener(this);
 		
 		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
+		
+		uiFont = FontCache.getInstance().getFont("alagard.ttf");
 		
 		setupTable(random.nextLong());
 	}
@@ -85,28 +94,36 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	}
 	
 	private void setupTable() {
+		moveCounter = 0;
+		final Vector2f cardSize = Card.DEFAULT_SIZE;
+		final Vector2f tableOffset = new Vector2f(0f, 24f);
+		
 		List<Card> cards = new ArrayList<>();
 		for (int i = 0; i < 52; i++) {
-			cards.add(new Card(new Vector2f(), new Vector2f(72f, 100f), Rank.values()[i % 13], Suit.values()[i / 13]));
+			int rankIndex = i % Rank.values().length;
+			int suitIndex = i / Rank.values().length;
+			cards.add(new Card(new Vector2f(), cardSize, Rank.values()[rankIndex], Suit.values()[suitIndex]));
 		}
 		random.setSeed(seed);
 		Collections.shuffle(cards, random);
 		
-		stock = new Stock(stockDraw);
+		stock = new Stock(new Vector2f(0f, 0f).add(tableOffset), cardSize, stockDraw);
 		stock.addCards(cards);
 		
-		waste = new Waste();
+		waste = new Waste(new Vector2f(72f, 0f).add(tableOffset), cardSize);
 		
 		foundations = new Foundation[4];
 		for (int i = 0; i < foundations.length; i++) {
-			foundations[i] = new Foundation(i);
+			var foundationPosition = new Vector2f((cardSize.x * 3) + i * cardSize.x, 0f).add(tableOffset);
+			foundations[i] = new Foundation(foundationPosition, cardSize);
 		}
 		foundationsBounds.set(foundations[0].getBoundingBox());
 		computeFoundationBounds();
 		
 		tableau = new Pile[7];
 		for (int i = 0; i < tableau.length; i++) {
-			tableau[i] = new Pile(i);
+			var pilePosition = new Vector2f(i * cardSize.x, cardSize.y).add(tableOffset);
+			tableau[i] = new Pile(pilePosition, cardSize);
 		}
 		for (int x = 0; x < 7; x++) {
 			for (int y = x; y < 7; y++) {
@@ -142,6 +159,10 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		operations.add(operation);
 		operation.execute();
 		
+		if (operation.incrementsMoves()) {
+			moveCounter++;
+		}
+		
 		computeFoundationBounds();
 		computeTableauBounds();
 	}
@@ -149,7 +170,12 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	private void undoOperation() {
 		if (operations.peekLast() != null) {
 //			operations.peekLast().describe();
-			operations.pollLast().rollback();
+			CardOperation operation = operations.pollLast();
+			operation.rollback();
+
+			if (operation.incrementsMoves()) {
+				moveCounter++;
+			}
 			
 			computeFoundationBounds();
 			computeTableauBounds();
@@ -253,6 +279,9 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		}
 		
 		hand.render(spriteRenderer, texture);
+		
+		textRenderer.renderText(0, 0, "FPS: " + window.getFps());
+		textRenderer.renderText(504 / 2f, 0, "Moves: " + moveCounter, uiFont);
 		
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
