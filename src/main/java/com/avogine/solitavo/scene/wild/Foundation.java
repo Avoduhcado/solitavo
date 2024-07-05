@@ -74,17 +74,12 @@ public class Foundation implements CardStack {
 	 * @param texture
 	 */
 	public void render(SpriteRenderer renderer, TextureAtlas texture) {
-		if (!isEmpty()) {
-			if (stack.size() == 1) {
-				renderer.renderSprite(position, size, texture.getId(), blankCardOffset);
-			} else {
-				var secondTopCard = stack.get(stack.size() - 2);
-				renderer.renderSprite(secondTopCard.getPosition(), secondTopCard.getSize(), texture.getId(), secondTopCard.computeTextureOffset(texture));
-			}
+		renderer.renderSpriteAtlas(position, size, texture, Rank.KING.ordinal(), Suit.BONUS.ordinal());
+		if (!isEmpty() && stack.size() > 1) {
+			var secondTopCard = stack.get(stack.size() - 2);
+			renderer.renderSpriteAtlas(secondTopCard.getPosition(), secondTopCard.getSize(), texture, secondTopCard.getRank().ordinal(), secondTopCard.getSuit().ordinal());
 		}
-		getTopCard().ifPresentOrElse(
-				topCard -> renderer.renderSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture)),
-				() -> renderer.renderSprite(position, size, texture.getId(), blankCardOffset));
+		getTopCard().ifPresent(topCard -> renderer.renderSpriteAtlas(topCard.getPosition(), topCard.getSize(), texture, topCard.getRank().ordinal(), topCard.getSuit().ordinal()));
 	}
 	
 	@Override

@@ -84,10 +84,11 @@ public class Stock implements CardHolder {
 	 */
 	public void render(SpriteRenderer renderer, TextureAtlas texture) {
 		if (cards.isEmpty()) {
-			renderer.renderSprite(position, size, texture.getId(), blankCardOffset);
+			// TODO The empty card space should probably be sourced from somewhere rather than just hardcoded here.
+			renderer.renderSpriteAtlas(position, size, texture, Rank.THREE.ordinal(), Suit.BONUS.ordinal());
 		} else {
 			var topCard = cards.getLast();
-			renderer.renderSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture));
+			renderer.renderSpriteAtlas(topCard.getPosition(), topCard.getSize(), texture, topCard.getSuit().ordinal(), topCard.getRank().ordinal());
 		}
 	}
 	

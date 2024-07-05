@@ -70,7 +70,7 @@ public class Waste implements CardHolder {
 	public void render(SpriteRenderer renderer, TextureAtlas texture) {
 		cards.stream()
 		.dropWhile(card -> cards.indexOf(card) < cards.size() - 3)
-		.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		.forEach(card -> renderer.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	private void splayCards() {

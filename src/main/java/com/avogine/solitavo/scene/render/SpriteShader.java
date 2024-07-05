@@ -12,7 +12,8 @@ public class SpriteShader extends ShaderProgram {
 	public final UniformMat4 model = new UniformMat4();
 	
 	public final UniformSampler spriteTexture = new UniformSampler();
-	public final UniformVec4 textureOffset = new UniformVec4();
+	public final UniformVec2 atlasCoordinates = new UniformVec2();
+	public final UniformVec2 atlasCellDimensions = new UniformVec2();
 	
 	/**
 	 * @param vertexShader
@@ -20,7 +21,7 @@ public class SpriteShader extends ShaderProgram {
 	 */
 	public SpriteShader(String vertexShader, String fragmentShader) {
 		super(vertexShader, fragmentShader);
-		storeAllUniformLocations(projection, model, spriteTexture, textureOffset);
+		storeAllUniformLocations(projection, model, spriteTexture, atlasCoordinates, atlasCellDimensions);
 		loadTextureUnit();
 	}
 	

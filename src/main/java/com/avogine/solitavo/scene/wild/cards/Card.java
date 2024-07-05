@@ -3,8 +3,6 @@ package com.avogine.solitavo.scene.wild.cards;
 import org.joml.*;
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.render.data.TextureAtlas;
-
 /**
  *
  */
@@ -102,14 +100,20 @@ public class Card {
 	 * @return the rank
 	 */
 	public Rank getRank() {
-		return rank;
+		if (isFaceUp()) {
+			return rank;
+		}
+		return Rank.values()[cardBack];
 	}
 
 	/**
 	 * @return the suit
 	 */
 	public Suit getSuit() {
-		return suit;
+		if (isFaceUp()) {
+			return suit;
+		}
+		return Suit.BONUS;
 	}
 
 	/**
@@ -129,17 +133,6 @@ public class Card {
 	@Override
 	public String toString() {
 		return "Card " + rank + " of " + suit.displayName;
-	}
-	
-	/**
-	 * @param atlas
-	 * @return
-	 */
-	public Vector4f computeTextureOffset(TextureAtlas atlas) {
-		TEXTURE_OFFSET.set((float) (isFaceUp() ? getRank().ordinal() : cardBack) / Rank.values().length,
-				(float) (isFaceUp() ? getSuit().ordinal() : Suit.BONUS.ordinal()) / Suit.values().length,
-				1f / atlas.getColumns(), 1f / atlas.getRows());
-		return TEXTURE_OFFSET;
 	}
 	
 	/**

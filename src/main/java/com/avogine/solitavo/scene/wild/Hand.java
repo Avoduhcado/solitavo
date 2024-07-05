@@ -116,7 +116,7 @@ public class Hand {
 	 * @param texture
 	 */
 	public void render(SpriteRenderer render, TextureAtlas texture) {
-		cards.keySet().forEach(card -> render.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		cards.keySet().forEach(card -> render.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	/**

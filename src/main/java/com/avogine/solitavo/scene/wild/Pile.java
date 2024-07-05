@@ -137,7 +137,7 @@ public class Pile implements CardStack {
 		if (isEmpty()) {
 			return;
 		}
-		cards.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		cards.forEach(card -> renderer.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	private float getVerticalOffset() {
