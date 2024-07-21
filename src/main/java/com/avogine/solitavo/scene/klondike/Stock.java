@@ -1,15 +1,15 @@
-package com.avogine.solitavo.scene.wild;
+package com.avogine.solitavo.scene.klondike;
 
 import java.util.*;
 
-import org.joml.*;
 import org.joml.Math;
+import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.util.CardHolder;
+import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.scene.cards.*;
+import com.avogine.solitavo.scene.util.CardHolder;
 
 /**
  * 
@@ -24,8 +24,6 @@ public class Stock implements CardHolder {
 	
 	private final Rectanglef boundingBox;
 	
-	private final Vector4f blankCardOffset;
-	
 	private DrawMode drawMode;
 	
 	/**
@@ -37,11 +35,7 @@ public class Stock implements CardHolder {
 		cards = new ArrayList<>();
 		this.position = position;
 		this.size = size;
-		boundingBox = new Rectanglef(position, size);
-		blankCardOffset = new Vector4f(
-				(float) Rank.THREE.ordinal() / Rank.values().length,
-				(float) Suit.BONUS.ordinal() / Suit.values().length,
-				1f / Rank.values().length, 1f / Suit.values().length);
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
 		
 		this.drawMode = drawMode;
 	}
@@ -53,6 +47,13 @@ public class Stock implements CardHolder {
 	 */
 	public Stock(Vector2f position, Vector2f size) {
 		this(position, size, DrawMode.STANDARD);
+	}
+	
+	/**
+	 * 
+	 */
+	public void init() {
+		cards.clear();
 	}
 	
 	@Override
@@ -82,7 +83,7 @@ public class Stock implements CardHolder {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void render(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRender renderer, TextureAtlas texture) {
 		if (cards.isEmpty()) {
 			// TODO The empty card space should probably be sourced from somewhere rather than just hardcoded here.
 			renderer.renderSpriteAtlas(position, size, texture, Rank.THREE.ordinal(), Suit.BONUS.ordinal());
@@ -97,6 +98,20 @@ public class Stock implements CardHolder {
 	 */
 	public boolean isEmpty() {
 		return cards.isEmpty();
+	}
+	
+	/**
+	 * @return
+	 */
+	public DrawMode getDrawMode() {
+		return drawMode;
+	}
+	
+	/**
+	 * @param drawMode the drawMode to set
+	 */
+	public void setDrawMode(DrawMode drawMode) {
+		this.drawMode = drawMode;
 	}
 	
 	/**

@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.wild;
+package com.avogine.solitavo.scene.klondike;
 
 import java.util.*;
 
@@ -7,9 +7,9 @@ import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.cards.Card;
-import com.avogine.solitavo.scene.wild.util.CardHolder;
+import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.scene.cards.Card;
+import com.avogine.solitavo.scene.util.CardHolder;
 
 /**
  *
@@ -30,7 +30,14 @@ public class Waste implements CardHolder {
 	public Waste(Vector2f position, Vector2f size) {
 		cards = new ArrayList<>();
 		this.position = position;
-		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.x + size.y);
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
+	}
+	
+	/**
+	 * 
+	 */
+	public void init() {
+		cards.clear();
 	}
 	
 	@Override
@@ -67,7 +74,7 @@ public class Waste implements CardHolder {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void render(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRender renderer, TextureAtlas texture) {
 		cards.stream()
 		.dropWhile(card -> cards.indexOf(card) < cards.size() - 3)
 		.forEach(card -> renderer.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));

@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.render;
+package com.avogine.solitavo.render;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
@@ -10,28 +10,22 @@ import java.lang.Math;
 
 import org.joml.*;
 
-import com.avogine.game.Game;
-import com.avogine.game.util.Cleanupable;
 import com.avogine.render.data.TextureAtlas;
+import com.avogine.solitavo.render.shaders.SpriteShader;
 
 /**
  *
  */
-public class SpriteRenderer implements Cleanupable {
+public class SpriteRender {
 
 	private SpriteShader spriteShader;
 	
 	private int spriteVao;
 
-	@Override
-	public void onRegister(Game game) {
-		init(game.getCurrentScene().getProjection());
-	}
-
 	/**
 	 * @param projection
 	 */
-	private void init(Matrix4f projection) {
+	public void init(Matrix4f projection) {
 		spriteShader = new SpriteShader("spriteVertex.glsl", "spriteFragment.glsl");
 		spriteShader.bind();
 		spriteShader.projection.loadMatrix(projection);
@@ -154,8 +148,10 @@ public class SpriteRenderer implements Cleanupable {
 		renderSpriteAtlas(position, size, 0f, 1f, textureAtlas, column, row);
 	}
 
-	@Override
-	public void onCleanup() {
+	/**
+	 * 
+	 */
+	public void cleanup() {
 		if (spriteShader != null) {
 			spriteShader.cleanup();
 		}

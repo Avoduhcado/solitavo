@@ -1,10 +1,10 @@
-package com.avogine.solitavo.scene.wild.util;
+package com.avogine.solitavo.scene.util;
 
 import java.util.List;
 
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.solitavo.scene.wild.cards.Card;
+import com.avogine.solitavo.scene.cards.Card;
 
 /**
  *

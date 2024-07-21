@@ -1,87 +1,65 @@
-package com.avogine.solitavo.scene.wild;
-
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11C.GL_BLEND;
-import static org.lwjgl.opengl.GL11C.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11C.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11C.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11C.glBlendFunc;
-import static org.lwjgl.opengl.GL11C.glDisable;
-import static org.lwjgl.opengl.GL14C.*;
+package com.avogine.solitavo.controller;
 
 import java.util.*;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import org.joml.Vector2f;
+import org.joml.*;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.glfw.GLFW;
 
-import com.avogine.game.Game;
-import com.avogine.game.scene.Scene;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
 import com.avogine.io.listener.*;
-import com.avogine.render.TextRenderer;
-import com.avogine.render.data.*;
-import com.avogine.render.loader.font.FontCache;
-import com.avogine.render.loader.texture.TextureCache;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.Stock.DrawMode;
-import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.command.*;
-import com.avogine.solitavo.scene.wild.util.*;
+import com.avogine.solitavo.Solitavo;
+import com.avogine.solitavo.scene.*;
+import com.avogine.solitavo.scene.cards.*;
+import com.avogine.solitavo.scene.command.*;
+import com.avogine.solitavo.scene.klondike.*;
+import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
+import com.avogine.solitavo.scene.util.*;
 import com.avogine.util.Pair;
 
 /**
  *
  */
-public class WildScene extends Scene implements MouseButtonListener, MouseMotionListener, KeyListener {
+public class KlondikeController implements MouseButtonListener, MouseMotionListener, KeyListener {
+
+	private final Vector2f lastMouse = new Vector2f();
+
+	private final ArrayDeque<CardOperation> operations = new ArrayDeque<>();
+
+	private final Random random = new Random();
+	private long seed;
 	
-	private SpriteRenderer spriteRenderer;
-	
-	private TextRenderer textRenderer;
-	
-	private TextureAtlas texture;
-	
+	private Matrix4f projection;
 	private Stock stock;
 	private Waste waste;
 	private Foundation[] foundations;
 	private Pile[] tableau;
 	private Hand hand;
+	private Rectanglef foundationsBounds;
+	private Rectanglef tableauBounds;
+	private AtomicInteger moveCounter;
 	
-	private final Rectanglef foundationsBounds = new Rectanglef();
-	private final Rectanglef tableauBounds = new Rectanglef();
-	
-	private final Vector2f lastMouse = new Vector2f();
-	
-	private DrawMode stockDraw = DrawMode.STANDARD;
-	
-	private final ArrayDeque<CardOperation> operations = new ArrayDeque<>();
-	
-	private FontDetails uiFont;
-	private int moveCounter;
-	
-	private final Random random = new Random();
-	private long seed;
-	
-	@Override
-	public void init(Game game, Window window) {
-		projection.setOrtho2D(0, 504, 500, 0);
-		spriteRenderer = new SpriteRenderer();
-		textRenderer = new TextRenderer();
+	/**
+	 * @param game 
+	 * @param window
+	 */
+	public void init(Solitavo game, Window window) {
+		KlondikeScene scene = game.getScene();
+		projection = scene.getProjection();
+		stock = scene.getStock();
+		waste = scene.getWaste();
+		foundations = scene.getFoundations();
+		tableau = scene.getTableau();
+		hand = scene.getHand();
+		foundationsBounds = scene.getFoundationsBounds();
+		tableauBounds = scene.getTableauBounds();
+		moveCounter = scene.getMoveCounter();
 		
-		game.register(spriteRenderer);
-		game.register(textRenderer);
-		
-		game.addInputListener(this);
-		
-		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
-		
-		uiFont = FontCache.getInstance().getFont("alagard.ttf");
+		window.getInput().addInputListener(this);
 		
 		setupTable(random.nextLong());
 	}
@@ -94,36 +72,28 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 	}
 	
 	private void setupTable() {
-		moveCounter = 0;
-		final Vector2f cardSize = Card.DEFAULT_SIZE;
-		final Vector2f tableOffset = new Vector2f(0f, 24f);
-		
 		List<Card> cards = new ArrayList<>();
 		for (int i = 0; i < 52; i++) {
 			int rankIndex = i % Rank.values().length;
 			int suitIndex = i / Rank.values().length;
-			cards.add(new Card(new Vector2f(), cardSize, Rank.values()[rankIndex], Suit.values()[suitIndex]));
+			cards.add(new Card(new Vector2f(), Rank.values()[rankIndex], Suit.values()[suitIndex]));
 		}
 		random.setSeed(seed);
 		Collections.shuffle(cards, random);
 		
-		stock = new Stock(new Vector2f(0f, 0f).add(tableOffset), cardSize, stockDraw);
+		stock.init();
 		stock.addCards(cards);
 		
-		waste = new Waste(new Vector2f(72f, 0f).add(tableOffset), cardSize);
+		waste.init();
 		
-		foundations = new Foundation[4];
-		for (int i = 0; i < foundations.length; i++) {
-			var foundationPosition = new Vector2f((cardSize.x * 3) + i * cardSize.x, 0f).add(tableOffset);
-			foundations[i] = new Foundation(foundationPosition, cardSize);
+		for (var foundation : foundations) {
+			foundation.init();
 		}
 		foundationsBounds.set(foundations[0].getBoundingBox());
 		computeFoundationBounds();
 		
-		tableau = new Pile[7];
-		for (int i = 0; i < tableau.length; i++) {
-			var pilePosition = new Vector2f(i * cardSize.x, cardSize.y).add(tableOffset);
-			tableau[i] = new Pile(pilePosition, cardSize);
+		for (var pile : tableau) {
+			pile.init();
 		}
 		for (int x = 0; x < 7; x++) {
 			for (int y = x; y < 7; y++) {
@@ -134,9 +104,37 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 		tableauBounds.set(tableau[0].getBoundingBox());
 		computeTableauBounds();
 		
-		hand = new Hand();
+		hand.init();
 		
+		moveCounter.set(0);
 		operations.clear();
+	}
+	
+	private void executeOperation(CardOperation operation) {
+		operations.add(operation);
+		operation.execute();
+		
+		if (operation.incrementsMoves()) {
+			moveCounter.incrementAndGet();
+		}
+		
+		computeFoundationBounds();
+		computeTableauBounds();
+	}
+	
+	private void undoOperation() {
+		if (operations.peekLast() != null) {
+//			operations.peekLast().describe();
+			CardOperation operation = operations.pollLast();
+			operation.rollback();
+
+			if (operation.incrementsMoves()) {
+				moveCounter.incrementAndGet();
+			}
+			
+			computeFoundationBounds();
+			computeTableauBounds();
+		}
 	}
 
 	private Rectanglef computeFoundationBounds() {
@@ -153,33 +151,6 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			tableauBounds.union(pile.getBoundingBox());
 		}
 		return tableauBounds;
-	}
-
-	private void executeOperation(CardOperation operation) {
-		operations.add(operation);
-		operation.execute();
-		
-		if (operation.incrementsMoves()) {
-			moveCounter++;
-		}
-		
-		computeFoundationBounds();
-		computeTableauBounds();
-	}
-	
-	private void undoOperation() {
-		if (operations.peekLast() != null) {
-//			operations.peekLast().describe();
-			CardOperation operation = operations.pollLast();
-			operation.rollback();
-
-			if (operation.incrementsMoves()) {
-				moveCounter++;
-			}
-			
-			computeFoundationBounds();
-			computeTableauBounds();
-		}
 	}
 
 	/**
@@ -281,44 +252,6 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 				.findFirst();
 	}
 	
-	// Debug
-//	private void splayDeck() {
-//		for (int i = 0; i < cards.size(); i++) {
-//			cards.get(i).setPosition((i % 13) * 18f, (float) Math.floor(i / 13.0) * 100);
-//			cards.get(i).setFaceUp(true);
-//		}
-//	}
-
-	@Override
-	public void onRender(Window window) {
-		glEnable(GL_BLEND);
-		glBlendEquation(GL_FUNC_ADD);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
-		
-		glClearColor(36f / 255f, 115f / 255f, 69f / 255f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
-		stock.render(spriteRenderer, texture);
-		waste.render(spriteRenderer, texture);
-		for (Foundation foundation : foundations) {
-			foundation.render(spriteRenderer, texture);
-		}
-		for (Pile pile : tableau) {
-			pile.render(spriteRenderer, texture);
-		}
-		
-		hand.render(spriteRenderer, texture);
-		
-		textRenderer.renderText(0, 0, "FPS: " + window.getFps());
-		textRenderer.renderText(504 / 2f, 0, "Moves: " + moveCounter, uiFont);
-		
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-	}
-	
 	@Override
 	public void mouseClicked(MouseEvent event) {
 		event.transformPoint(projection);
@@ -407,7 +340,8 @@ public class WildScene extends Scene implements MouseButtonListener, MouseMotion
 			case GLFW.GLFW_KEY_5 -> Card.setCardBack(5);
 			case GLFW.GLFW_KEY_6 -> Card.setCardBack(6);
 			case GLFW.GLFW_KEY_7 -> Card.setCardBack(7);
-			case GLFW.GLFW_KEY_1 -> stockDraw = (stockDraw == DrawMode.STANDARD ? DrawMode.SINGLE : DrawMode.STANDARD);
+			// TODO Put this in a menu so you can't just change it mid game
+			case GLFW.GLFW_KEY_1 -> stock.setDrawMode(stock.getDrawMode()== DrawMode.STANDARD ? DrawMode.SINGLE : DrawMode.STANDARD);
 			default -> {
 				// Unbound key
 			}

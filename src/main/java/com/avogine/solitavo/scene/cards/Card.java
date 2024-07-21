@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.wild.cards;
+package com.avogine.solitavo.scene.cards;
 
 import org.joml.*;
 import org.joml.primitives.Rectanglef;
@@ -34,6 +34,19 @@ public class Card {
 	public Card(Vector2f position, Vector2f size, Rank rank, Suit suit) {
 		this.position = position;
 		this.size = size;
+		this.rank = rank;
+		this.suit = suit;
+		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
+	}
+	
+	/**
+	 * @param position
+	 * @param rank
+	 * @param suit
+	 */
+	public Card(Vector2f position, Rank rank, Suit suit) {
+		this.position = position;
+		this.size = Card.DEFAULT_SIZE;
 		this.rank = rank;
 		this.suit = suit;
 		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);

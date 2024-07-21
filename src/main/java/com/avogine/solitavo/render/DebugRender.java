@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.render;
+package com.avogine.solitavo.render;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -11,24 +11,21 @@ import org.joml.*;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.opengl.GL11;
 
-import com.avogine.game.Game;
-import com.avogine.game.util.Cleanupable;
+import com.avogine.solitavo.render.shaders.DebugShader;
 
 /**
  *
  */
-public class DebugRenderer implements Cleanupable {
+public class DebugRender {
 
 	private DebugShader debugShader;
 	
 	private int spriteVao;
 	
-	@Override
-	public void onRegister(Game game) {
-		init(game.getCurrentScene().getProjection());
-	}
-	
-	private void init(Matrix4f projection) {
+	/**
+	 * @param projection
+	 */
+	public void init(Matrix4f projection) {
 		debugShader = new DebugShader();
 		debugShader.bind();
 		debugShader.projection.loadMatrix(projection);
@@ -62,6 +59,7 @@ public class DebugRenderer implements Cleanupable {
 	 * @param rectangleHeight 
 	 * @param rotation
 	 * @param scale Apply scaling from center of sprite.
+	 * @param color 
 	 */
 	public void renderRect(float rectangleX, float rectangleY, float rectangleWidth, float rectangleHeight, float rotation, float scale, Vector4f color) {
 		glLineWidth(2.0f);
@@ -94,8 +92,11 @@ public class DebugRenderer implements Cleanupable {
 	}
 	
 	/**
-	 * @param position
-	 * @param size
+	 * @param rectangleX 
+	 * @param rectangleY 
+	 * @param rectangleWidth 
+	 * @param rectangleHeight 
+	 * @param color 
 	 */
 	public void renderRect(float rectangleX, float rectangleY, float rectangleWidth, float rectangleHeight, Vector4f color) {
 		renderRect(rectangleX, rectangleY, rectangleWidth, rectangleHeight, 0, 1, color);
@@ -103,13 +104,16 @@ public class DebugRenderer implements Cleanupable {
 	
 	/**
 	 * @param rectangle
+	 * @param color 
 	 */
 	public void renderRect(Rectanglef rectangle, Vector4f color) {
 		renderRect(rectangle.minX, rectangle.minY, rectangle.lengthX(), rectangle.lengthY(), color);
 	}
 
-	@Override
-	public void onCleanup() {
+	/**
+	 * 
+	 */
+	public void cleanup() {
 		if (debugShader != null) {
 			debugShader.cleanup();
 		}
