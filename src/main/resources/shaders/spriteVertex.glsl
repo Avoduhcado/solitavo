@@ -7,11 +7,11 @@ out vec2 TexCoords;
 uniform mat4 projection;
 uniform mat4 model;
 
-uniform sampler2D spriteTexture;
-uniform vec4 textureOffset;
+uniform vec2 atlasCoordinates;
+uniform vec2 atlasCellDimensions;
 
 void main()
 {
-	TexCoords = textureOffset.xy + vec2(textureOffset.z * vertex.z, textureOffset.w * vertex.w);
+	TexCoords = atlasCoordinates + vec2(atlasCellDimensions.x * vertex.z, atlasCellDimensions.y * vertex.w);
 	gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);
 }

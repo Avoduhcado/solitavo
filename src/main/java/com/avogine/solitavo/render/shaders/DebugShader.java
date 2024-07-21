@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.render;
+package com.avogine.solitavo.render.shaders;
 
 import com.avogine.render.shader.ShaderProgram;
 import com.avogine.render.shader.uniform.*;

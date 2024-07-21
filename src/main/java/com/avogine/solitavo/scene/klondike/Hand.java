@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.wild;
+package com.avogine.solitavo.scene.klondike;
 
 import java.util.*;
 
@@ -7,10 +7,10 @@ import org.joml.primitives.Rectanglef;
 
 import com.avogine.logging.AvoLog;
 import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.cards.Card;
-import com.avogine.solitavo.scene.wild.command.*;
-import com.avogine.solitavo.scene.wild.util.CardHolder;
+import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.scene.cards.Card;
+import com.avogine.solitavo.scene.command.*;
+import com.avogine.solitavo.scene.util.CardHolder;
 import com.avogine.util.Pair;
 
 /**
@@ -30,6 +30,15 @@ public class Hand {
 	public Hand() {
 		cards = new LinkedHashMap<>();
 		boundingBox = new Rectanglef();
+	}
+	
+	/**
+	 * 
+	 */
+	public void init() {
+		cards.clear();
+		supplier = null;
+		updateBoundingBox();
 	}
 	
 	/**
@@ -115,8 +124,8 @@ public class Hand {
 	 * @param render
 	 * @param texture
 	 */
-	public void render(SpriteRenderer render, TextureAtlas texture) {
-		cards.keySet().forEach(card -> render.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+	public void render(SpriteRender render, TextureAtlas texture) {
+		cards.keySet().forEach(card -> render.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	/**

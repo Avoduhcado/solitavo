@@ -1,14 +1,14 @@
-package com.avogine.solitavo.scene.wild;
+package com.avogine.solitavo.scene.klondike;
 
 import java.util.*;
 
-import org.joml.*;
+import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.util.CardStack;
+import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.scene.cards.*;
+import com.avogine.solitavo.scene.util.CardStack;
 
 /**
  *
@@ -23,8 +23,6 @@ public class Foundation implements CardStack {
 	
 	private final Rectanglef boundingBox;
 	
-	private final Vector4f blankCardOffset;
-	
 	/**
 	 * @param position 
 	 * @param size 
@@ -34,10 +32,13 @@ public class Foundation implements CardStack {
 		this.position = position;
 		this.size = size;
 		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
-		blankCardOffset = new Vector4f(
-				(float) Rank.KING.ordinal() / Rank.values().length,
-				(float) Suit.BONUS.ordinal() / Suit.values().length,
-				1f / Rank.values().length, 1f / Suit.values().length);
+	}
+	
+	/**
+	 * 
+	 */
+	public void init() {
+		stack.clear();
 	}
 	
 	/**
@@ -73,18 +74,13 @@ public class Foundation implements CardStack {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void render(SpriteRenderer renderer, TextureAtlas texture) {
-		if (!isEmpty()) {
-			if (stack.size() == 1) {
-				renderer.renderSprite(position, size, texture.getId(), blankCardOffset);
-			} else {
-				var secondTopCard = stack.get(stack.size() - 2);
-				renderer.renderSprite(secondTopCard.getPosition(), secondTopCard.getSize(), texture.getId(), secondTopCard.computeTextureOffset(texture));
-			}
+	public void render(SpriteRender renderer, TextureAtlas texture) {
+		renderer.renderSpriteAtlas(position, size, texture, Rank.KING.ordinal(), Suit.BONUS.ordinal());
+		if (!isEmpty() && stack.size() > 1) {
+			var secondTopCard = stack.get(stack.size() - 2);
+			renderer.renderSpriteAtlas(secondTopCard.getPosition(), secondTopCard.getSize(), texture, secondTopCard.getRank().ordinal(), secondTopCard.getSuit().ordinal());
 		}
-		getTopCard().ifPresentOrElse(
-				topCard -> renderer.renderSprite(topCard.getPosition(), topCard.getSize(), texture.getId(), topCard.computeTextureOffset(texture)),
-				() -> renderer.renderSprite(position, size, texture.getId(), blankCardOffset));
+		getTopCard().ifPresent(topCard -> renderer.renderSpriteAtlas(topCard.getPosition(), topCard.getSize(), texture, topCard.getRank().ordinal(), topCard.getSuit().ordinal()));
 	}
 	
 	@Override

@@ -1,11 +1,11 @@
-package com.avogine.solitavo.scene.wild.command;
+package com.avogine.solitavo.scene.command;
 
 import java.util.List;
 
 import com.avogine.logging.AvoLog;
-import com.avogine.solitavo.scene.wild.Pile;
-import com.avogine.solitavo.scene.wild.cards.Card;
-import com.avogine.solitavo.scene.wild.util.CardHolder;
+import com.avogine.solitavo.scene.cards.Card;
+import com.avogine.solitavo.scene.klondike.Pile;
+import com.avogine.solitavo.scene.util.CardHolder;
 
 /**
  *

@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.wild;
+package com.avogine.solitavo.scene.klondike;
 
 import java.util.*;
 
@@ -6,9 +6,9 @@ import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.scene.render.SpriteRenderer;
-import com.avogine.solitavo.scene.wild.cards.*;
-import com.avogine.solitavo.scene.wild.util.CardStack;
+import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.scene.cards.*;
+import com.avogine.solitavo.scene.util.CardStack;
 
 /**
  *
@@ -37,6 +37,14 @@ public class Pile implements CardStack {
 		faceUpBounds = new Rectanglef(boundingBox);
 		faceDownOffset = size.y * 0.12f;
 		faceUpOffset = size.y * 0.2f;
+	}
+	
+	/**
+	 * 
+	 */
+	public void init() {
+		cards.clear();
+		updateFaceUpBounds();
 	}
 	
 	/**
@@ -133,11 +141,11 @@ public class Pile implements CardStack {
 	 * @param renderer
 	 * @param texture
 	 */
-	public void render(SpriteRenderer renderer, TextureAtlas texture) {
+	public void render(SpriteRender renderer, TextureAtlas texture) {
 		if (isEmpty()) {
 			return;
 		}
-		cards.forEach(card -> renderer.renderSprite(card.getPosition(), card.getSize(), texture.getId(), card.computeTextureOffset(texture)));
+		cards.forEach(card -> renderer.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	private float getVerticalOffset() {

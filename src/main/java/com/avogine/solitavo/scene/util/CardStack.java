@@ -1,9 +1,9 @@
-package com.avogine.solitavo.scene.wild.util;
+package com.avogine.solitavo.scene.util;
 
 import java.util.*;
 import java.util.stream.Stream;
 
-import com.avogine.solitavo.scene.wild.cards.Card;
+import com.avogine.solitavo.scene.cards.Card;
 
 /**
  *

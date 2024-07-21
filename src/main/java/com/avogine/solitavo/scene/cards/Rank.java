@@ -1,4 +1,4 @@
-package com.avogine.solitavo.scene.wild.cards;
+package com.avogine.solitavo.scene.cards;
 
 /**
  *
