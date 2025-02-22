@@ -1,6 +1,6 @@
 package com.avogine.solitavo.scene.cards;
 
-import org.joml.*;
+import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 /**
@@ -9,10 +9,10 @@ import org.joml.primitives.Rectanglef;
 public class Card {
 	
 	/**
+	 * TODO Convert this into a simple ratio for easier scaling?
 	 * The default width and height of a card.
 	 */
 	public static final Vector2f DEFAULT_SIZE = new Vector2f(72f, 100f);
-	private static final Vector4f TEXTURE_OFFSET = new Vector4f();
 	
 	private static int cardBack = 4;
 
@@ -50,6 +50,10 @@ public class Card {
 		this.rank = rank;
 		this.suit = suit;
 		boundingBox = new Rectanglef(position.x, position.y, position.x + size.x, position.y + size.y);
+	}
+	
+	private void updateBoundingBox() {
+		boundingBox.setMin(position.x, position.y).setMax(position.x + size.x, position.y + size.y);
 	}
 	
 	/**
@@ -105,10 +109,6 @@ public class Card {
 		return boundingBox;
 	}
 	
-	private void updateBoundingBox() {
-		boundingBox.setMin(position.x, position.y).setMax(position.x + size.x, position.y + size.y);
-	}
-
 	/**
 	 * @return the rank
 	 */
@@ -143,11 +143,6 @@ public class Card {
 		this.faceUp = faceUp;
 	}
 	
-	@Override
-	public String toString() {
-		return "Card " + rank + " of " + suit.displayName;
-	}
-	
 	/**
 	 * @param cardBack
 	 */
@@ -156,6 +151,11 @@ public class Card {
 			return;
 		}
 		Card.cardBack = cardBack;
+	}
+	
+	@Override
+	public String toString() {
+		return "Card " + rank + " of " + suit.displayName;
 	}
 	
 }

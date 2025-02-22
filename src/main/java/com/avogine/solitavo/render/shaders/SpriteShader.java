@@ -13,22 +13,20 @@ public class SpriteShader extends ShaderProgram {
 	public final UniformMat4 projection = new UniformMat4();
 	public final UniformMat4 model = new UniformMat4();
 	
-	public final UniformSampler spriteTexture = new UniformSampler();
-	public final UniformVec2 atlasCoordinates = new UniformVec2();
-	public final UniformVec2 atlasCellDimensions = new UniformVec2();
+	public final UniformSampler spriteSheet = new UniformSampler();
 	
 	/**
 	 * 
 	 */
 	public SpriteShader() {
 		super(SHADERS.with("spriteVertex.glsl"), SHADERS.with("spriteFragment.glsl"));
-		storeAllUniformLocations(projection, model, spriteTexture, atlasCoordinates, atlasCellDimensions);
+		storeAllUniformLocations(projection, model, spriteSheet);
 		loadTextureUnit();
 	}
 	
 	private void loadTextureUnit() {
 		bind();
-		spriteTexture.loadTexUnit(0);
+		spriteSheet.loadTexUnit(0);
 		unbind();
 	}
 	

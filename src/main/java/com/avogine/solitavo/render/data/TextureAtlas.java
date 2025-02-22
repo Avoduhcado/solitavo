@@ -36,4 +36,36 @@ public record TextureAtlas(Texture texture, int columns, int rows, float cellWid
 		this(texture, columns, rows, 1.0f / columns, 1.0f / rows);
 	}
 	
+	/**
+	 * @param column
+	 * @return the x coordinate in texels of the given column.
+	 */
+	public float cellX(int column) {
+		return column * cellWidth;
+	}
+	
+	/**
+	 * @param row
+	 * @return the y coordinate in texels of the given row.
+	 */
+	public float cellY(int row) {
+		return row * cellHeight;
+	}
+	
+	/**
+	 * @param column
+	 * @return {@link #cellX(int)} from the given column + {@link #cellWidth}.
+	 */
+	public float cellWidth(int column) {
+		return cellX(column) + cellWidth;
+	}
+	
+	/**
+	 * @param row
+	 * @return {@link #cellY(int)} from the given row + {@link #cellHeight}
+	 */
+	public float cellHeight(int row) {
+		return cellY(row) + cellHeight;
+	}
+	
 }
