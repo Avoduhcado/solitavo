@@ -5,8 +5,8 @@ import java.util.*;
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.util.CardStack;
 

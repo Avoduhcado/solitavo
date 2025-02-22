@@ -1,5 +1,7 @@
 package com.avogine.solitavo.render.shaders;
 
+import static com.avogine.util.resource.ResourceConstants.SHADERS;
+
 import com.avogine.render.shader.ShaderProgram;
 import com.avogine.render.shader.uniform.*;
 
@@ -16,11 +18,10 @@ public class SpriteShader extends ShaderProgram {
 	public final UniformVec2 atlasCellDimensions = new UniformVec2();
 	
 	/**
-	 * @param vertexShader
-	 * @param fragmentShader
+	 * 
 	 */
-	public SpriteShader(String vertexShader, String fragmentShader) {
-		super(vertexShader, fragmentShader);
+	public SpriteShader() {
+		super(SHADERS.with("spriteVertex.glsl"), SHADERS.with("spriteFragment.glsl"));
 		storeAllUniformLocations(projection, model, spriteTexture, atlasCoordinates, atlasCellDimensions);
 		loadTextureUnit();
 	}

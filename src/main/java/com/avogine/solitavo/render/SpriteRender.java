@@ -6,11 +6,10 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.lang.Math;
-
 import org.joml.*;
+import org.joml.Math;
 
-import com.avogine.render.data.TextureAtlas;
+import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.render.shaders.SpriteShader;
 
 /**
@@ -26,7 +25,7 @@ public class SpriteRender {
 	 * @param projection
 	 */
 	public void init(Matrix4f projection) {
-		spriteShader = new SpriteShader("spriteVertex.glsl", "spriteFragment.glsl");
+		spriteShader = new SpriteShader();
 		spriteShader.bind();
 		spriteShader.projection.loadMatrix(projection);
 		spriteShader.unbind();
@@ -73,7 +72,7 @@ public class SpriteRender {
 		modelMatrix.translate(position.x, position.y, 0);
 		
 		modelMatrix.translate(size.x * 0.5f, size.y * 0.5f, 0);
-		modelMatrix.rotateZ((float) Math.toRadians(rotation));
+		modelMatrix.rotateZ(Math.toRadians(rotation));
 		modelMatrix.translate(-size.x * 0.5f, -size.y * 0.5f, 0);
 		
 		modelMatrix.scale(size.x, size.y, 1f);
@@ -112,14 +111,14 @@ public class SpriteRender {
 	public void renderSpriteAtlas(Vector2f position, Vector2f size, float rotation, float scale, TextureAtlas textureAtlas, int column, int row) {
 		spriteShader.bind();
 
-		spriteShader.atlasCellDimensions.loadVec2(textureAtlas.getCellWidth(), textureAtlas.getCellHeight());
-		spriteShader.atlasCoordinates.loadVec2(column * textureAtlas.getCellWidth(), row * textureAtlas.getCellHeight());
+		spriteShader.atlasCellDimensions.loadVec2(textureAtlas.cellWidth(), textureAtlas.cellHeight());
+		spriteShader.atlasCoordinates.loadVec2(column * textureAtlas.cellWidth(), row * textureAtlas.cellHeight());
 		
 		Matrix4f modelMatrix = new Matrix4f();
 		modelMatrix.translate(position.x, position.y, 0);
 		
 		modelMatrix.translate(size.x * 0.5f, size.y * 0.5f, 0);
-		modelMatrix.rotateZ((float) Math.toRadians(rotation));
+		modelMatrix.rotateZ(Math.toRadians(rotation));
 		modelMatrix.translate(-size.x * 0.5f, -size.y * 0.5f, 0);
 		
 		modelMatrix.scale(size.x, size.y, 1f);
@@ -128,7 +127,7 @@ public class SpriteRender {
 		spriteShader.model.loadMatrix(modelMatrix);
 		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureAtlas.id());
+		textureAtlas.texture().bind();
 		
 		glBindVertexArray(spriteVao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);

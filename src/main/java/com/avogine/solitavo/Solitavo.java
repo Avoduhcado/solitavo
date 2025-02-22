@@ -43,7 +43,7 @@ public class Solitavo implements Game {
 
 	@Override
 	public void init(Window window) {
-		render.init();
+		render.init(window);
 		render.setupData(scene);
 		controller.init(this, window);
 		gui.init(window);
@@ -75,6 +75,7 @@ public class Solitavo implements Game {
 
 	@Override
 	public void cleanup() {
+		scene.cleanup();
 		render.cleanup();
 	}
 	

@@ -18,12 +18,13 @@ import org.joml.*;
 
 import com.avogine.io.Window;
 import com.avogine.render.*;
-import com.avogine.render.data.*;
-import com.avogine.render.loader.font.FontCache;
-import com.avogine.render.loader.texture.TextureCache;
-import com.avogine.solitavo.scene.*;
+import com.avogine.render.data.FontDetails;
+import com.avogine.render.data.texture.Texture;
+import com.avogine.solitavo.render.data.TextureAtlas;
+import com.avogine.solitavo.scene.KlondikeScene;
 import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
+import com.avogine.util.resource.ResourceConstants;
 
 /**
  *
@@ -40,7 +41,7 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	private final Vector4f debugTableauColor;
 	private final Vector4f debugHandColor;
 	
-	private TextureAtlas texture;
+	private TextureAtlas cardSheetAtlas;
 	private FontDetails uiFont;
 	
 	/**
@@ -59,9 +60,7 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	}
 	
 	@Override
-	public void init() {
-		SceneRender.super.init();
-
+	public void init(Window window) {
 		glEnable(GL_MULTISAMPLE);
 		
 		glEnable(GL_BLEND);
@@ -76,13 +75,14 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	 * @param scene
 	 */
 	public void setupData(KlondikeScene scene) {
-		Matrix4f projection = scene.getProjection();
+		Matrix4f projection = scene.getProjection().getProjectionMatrix();
 		spriteRender.init(projection);
-		textRender.init(projection);
+		textRender.init(projection, scene.getFontCache());
 		debugRender.init(projection);
 		
-		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
-		uiFont = FontCache.getInstance().getFont("alagard.ttf");
+		Texture cardSheetTexture = scene.getTextureCache().getTexture(ResourceConstants.TEXTURES.with("Cardsheet.png"));
+		cardSheetAtlas = new TextureAtlas(cardSheetTexture, Rank.values().length, Suit.values().length);
+		uiFont = scene.getFontCache().getFont(ResourceConstants.FONTS.with("alagard.ttf"));
 	}
 
 	@Override
@@ -92,15 +92,15 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		
-		scene.getStock().render(spriteRender, texture);
-		scene.getWaste().render(spriteRender, texture);
+		scene.getStock().render(spriteRender, cardSheetAtlas);
+		scene.getWaste().render(spriteRender, cardSheetAtlas);
 		for (Foundation foundation : scene.getFoundations()) {
-			foundation.render(spriteRender, texture);
+			foundation.render(spriteRender, cardSheetAtlas);
 		}
 		for (Pile pile : scene.getTableau()) {
-			pile.render(spriteRender, texture);
+			pile.render(spriteRender, cardSheetAtlas);
 		}
-		scene.getHand().render(spriteRender, texture);
+		scene.getHand().render(spriteRender, cardSheetAtlas);
 		
 		if (window.isDebugMode()) {
 			debugRender(scene);
@@ -132,12 +132,6 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		spriteRender.cleanup();
 		textRender.cleanup();
 		debugRender.cleanup();
-		if (texture != null) {
-			texture.cleanup();
-		}
-		if (uiFont != null) {
-			uiFont.cleanup();
-		}
 	}
 
 }
