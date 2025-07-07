@@ -84,13 +84,7 @@ public class Stock implements CardHolder {
 	 * @param texture
 	 */
 	public void render(SpriteRender renderer, TextureAtlas texture) {
-		if (cards.isEmpty()) {
-			// TODO The empty card space should probably be sourced from somewhere rather than just hardcoded here.
-			renderer.renderSpriteAtlas(position, size, texture, Rank.THREE.ordinal(), Suit.BONUS.ordinal());
-		} else {
-			var topCard = cards.getLast();
-			renderer.renderSpriteAtlas(topCard.getPosition(), topCard.getSize(), texture, topCard.getSuit().ordinal(), topCard.getRank().ordinal());
-		}
+		renderer.renderSpriteAtlas(position, size, texture, Rank.THREE.ordinal(), Suit.BONUS.ordinal());
 	}
 	
 	/**
@@ -125,7 +119,17 @@ public class Stock implements CardHolder {
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
 	}
+
+	@Override
+	public Vector2f getNextSpace() {
+		return position;
+	}
 	
+	@Override
+	public String toString() {
+		return "Stock (empty: " + isEmpty() + ")";
+	}
+
 	/**
 	 *
 	 */

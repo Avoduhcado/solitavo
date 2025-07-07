@@ -22,6 +22,8 @@ public class Card {
 	private final Suit suit;
 	private boolean faceUp;
 	
+	private boolean selected;
+	
 	private final Rectanglef boundingBox;
 	
 	/**
@@ -144,6 +146,20 @@ public class Card {
 	}
 	
 	/**
+	 * @return the selected
+	 */
+	public boolean isSelected() {
+		return selected;
+	}
+	
+	/**
+	 * @param selected the selected to set
+	 */
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+	
+	/**
 	 * @param cardBack
 	 */
 	public static void setCardBack(int cardBack) {
@@ -157,5 +173,4 @@ public class Card {
 	public String toString() {
 		return "Card " + rank + " of " + suit.displayName;
 	}
-	
 }

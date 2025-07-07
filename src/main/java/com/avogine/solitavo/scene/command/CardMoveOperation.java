@@ -12,14 +12,14 @@ import com.avogine.solitavo.scene.util.CardHolder;
  */
 public class CardMoveOperation implements CardOperation {
 
-	private List<Card> cards;
+	protected List<Card> cards;
 	
-	private CardHolder origin;
-	private CardHolder destination;
+	protected CardHolder origin;
+	protected CardHolder destination;
 	
-	private boolean reverseOrdering;
+	protected boolean reverseOrdering;
 	
-	private boolean unreveal;
+	protected boolean unreveal;
 	
 	/**
 	 * @param cards 
@@ -45,7 +45,7 @@ public class CardMoveOperation implements CardOperation {
 	}
 	
 	@Override
-	public void execute() {
+	public void execute(float delta) {
 		if (origin instanceof Pile pile && !pile.isEmpty()) {
 			int selectionIndex = pile.getIndexOf(cards.getFirst());
 			unreveal = selectionIndex > 0 && !pile.isCardFaceUpAtIndex(selectionIndex - 1);
@@ -72,7 +72,18 @@ public class CardMoveOperation implements CardOperation {
 	
 	@Override
 	public void describe() {
-		AvoLog.log().debug("Move cards {} from origin: {} to destination: {} in reverse? {}", cards, origin, destination, reverseOrdering);
+		AvoLog.log().debug("Move cards {} from origin: `{}` to destination: `{}` in reverse: [{}]", cards, origin, destination, reverseOrdering);
 	}
 
+	@Override
+	public boolean isExecuting() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void commit() {
+		// TODO Auto-generated method stub
+		
+	}
 }

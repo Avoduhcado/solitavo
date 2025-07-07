@@ -8,13 +8,20 @@ public interface CardOperation {
 	/**
 	 * 
 	 */
-	public void execute();
+	public void execute(float delta);
+	
+	public void commit();
 	
 	/**
 	 * 
 	 */
 	public void rollback();
-
+	
+	/**
+	 * @return
+	 */
+	public boolean isExecuting();
+	
 	/**
 	 * @return True if this operation should increment the game's total moves counter.
 	 */

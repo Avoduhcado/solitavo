@@ -11,6 +11,7 @@ import static org.lwjgl.opengl.GL11C.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11C.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11C.glBlendFunc;
 import static org.lwjgl.opengl.GL11C.glDisable;
+import static org.lwjgl.opengl.GL11C.glViewport;
 import static org.lwjgl.opengl.GL13C.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL14C.*;
 
@@ -18,12 +19,13 @@ import org.joml.*;
 
 import com.avogine.io.Window;
 import com.avogine.render.*;
-import com.avogine.render.data.FontDetails;
-import com.avogine.render.data.texture.Texture;
+import com.avogine.render.opengl.Texture;
+import com.avogine.render.opengl.font.Font;
 import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.KlondikeScene;
 import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
+import com.avogine.solitavo.scene.util.CardComparator;
 import com.avogine.util.resource.ResourceConstants;
 
 /**
@@ -42,7 +44,8 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	private final Vector4f debugHandColor;
 	
 	private TextureAtlas cardSheetAtlas;
-	private FontDetails uiFont;
+	private Font uiFont;
+	private CardComparator cardComparator;
 	
 	/**
 	 * 
@@ -57,6 +60,8 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		debugFoundationsColor = new Vector4f(0f, 1f, 1f, 1f);
 		debugTableauColor = new Vector4f(0.5f, 0.5f, 0.5f, 1f);
 		debugHandColor = new Vector4f(0f, 0f, 0f, 1f);
+		
+		cardComparator = new CardComparator();
 	}
 	
 	@Override
@@ -77,7 +82,7 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	public void setupData(KlondikeScene scene) {
 		Matrix4f projection = scene.getProjection().getProjectionMatrix();
 		spriteRender.init(projection);
-		textRender.init(projection, scene.getFontCache());
+		textRender.init(scene.getProjection().getWidth(), scene.getProjection().getHeight(), scene.getFontCache());
 		debugRender.init(projection);
 		
 		Texture cardSheetTexture = scene.getTextureCache().getTexture(ResourceConstants.TEXTURES.with("Cardsheet.png"));
@@ -92,22 +97,22 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		
+		glViewport(0, 0, window.getWidth(), window.getHeight());
+		
 		scene.getStock().render(spriteRender, cardSheetAtlas);
-		scene.getWaste().render(spriteRender, cardSheetAtlas);
 		for (Foundation foundation : scene.getFoundations()) {
 			foundation.render(spriteRender, cardSheetAtlas);
 		}
-		for (Pile pile : scene.getTableau()) {
-			pile.render(spriteRender, cardSheetAtlas);
-		}
-		scene.getHand().render(spriteRender, cardSheetAtlas);
+		scene.getCards().stream()
+		.sorted(cardComparator)
+		.forEach(card -> spriteRender.renderSpriteAtlas(card.getPosition(), card.getSize(), cardSheetAtlas, card.getRank().ordinal(), card.getSuit().ordinal()));
 		
 		if (window.isDebugMode()) {
 			debugRender(scene);
 		}
 		
 		textRender.renderText(0, 0, "FPS: " + window.getFps());
-		textRender.renderText(504 / 2f, 0, "Moves: " + scene.getMoveCounter(), uiFont);
+		textRender.renderText(504 / 2f, 0, uiFont, "Moves: " + scene.getMoveCounter());
 		
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);

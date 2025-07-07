@@ -18,6 +18,7 @@ public class Pile implements CardStack {
 	private final List<Card> cards;
 	
 	private final Vector2f position;
+	private final Vector2f nextSpace;
 	
 	private final Rectanglef boundingBox;
 	
@@ -37,6 +38,7 @@ public class Pile implements CardStack {
 		faceUpBounds = new Rectanglef(boundingBox);
 		faceDownOffset = size.y * 0.12f;
 		faceUpOffset = size.y * 0.2f;
+		nextSpace = new Vector2f(position.x, position.y);
 	}
 	
 	/**
@@ -97,8 +99,10 @@ public class Pile implements CardStack {
 				.ifPresentOrElse(card -> faceUpBounds.setMin(card.getPosition()), () -> faceUpBounds.setMin(position));
 		if (isEmpty()) {
 			faceUpBounds.setMax(boundingBox.maxX, boundingBox.maxY);
+			nextSpace.set(nextSpace.x, position.y);
 		} else {
 			faceUpBounds.setMax(cards.getLast().getBoundingBox().maxX, cards.getLast().getBoundingBox().maxY);
+			nextSpace.set(nextSpace.x, cards.getLast().getPosition().y + faceUpOffset);
 		}
 	}
 	
@@ -192,6 +196,19 @@ public class Pile implements CardStack {
 		} else {
 			return faceUpBounds;
 		}
+	}
+
+	@Override
+	public Vector2f getNextSpace() {
+		if (isEmpty()) {
+			return position;
+		}
+		return nextSpace;
+	}
+	
+	@Override
+	public String toString() {
+		return "Pile [ " + ((int) (position.x() / boundingBox.lengthX()) + 1) + " ]";
 	}
 
 }

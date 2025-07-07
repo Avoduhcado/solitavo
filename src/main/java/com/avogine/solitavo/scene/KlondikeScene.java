@@ -1,13 +1,15 @@
 package com.avogine.solitavo.scene;
 
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.game.scene.*;
-import com.avogine.render.*;
-import com.avogine.solitavo.scene.cards.Card;
+import com.avogine.render.font.FontCache;
+import com.avogine.render.opengl.image.util.TextureCache;
+import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
 import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
 
@@ -15,6 +17,8 @@ import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
  *
  */
 public class KlondikeScene extends Scene {
+	
+	private final List<Card> deck;
 	
 	private final Stock stock;
 	private final Waste waste;
@@ -39,6 +43,13 @@ public class KlondikeScene extends Scene {
 		super(new OrthoProjection(504, 500), new Camera());
 		final Vector2f cardSize = Card.DEFAULT_SIZE;
 		final Vector2f tableOffset = new Vector2f(0f, 24f);
+		
+		deck = new ArrayList<>();
+		for (int i = 0; i < 52; i++) {
+			int rankIndex = i % Rank.values().length;
+			int suitIndex = i / Rank.values().length;
+			deck.add(new Card(new Vector2f(), Rank.values()[rankIndex], Suit.values()[suitIndex]));
+		}
 		
 		stock = new Stock(new Vector2f(0f, 0f).add(tableOffset), cardSize, stockDraw);
 		waste = new Waste(new Vector2f(72f, 0f).add(tableOffset), cardSize);
@@ -77,6 +88,14 @@ public class KlondikeScene extends Scene {
 	public void cleanup() {
 		textureCache.cleanup();
 		fontCache.cleanup();
+	}
+	
+	/**
+	 * This should never be modified directly.
+	 * @return the complete deck of cards
+	 */
+	public List<Card> getCards() {
+		return deck;
 	}
 	
 	/**

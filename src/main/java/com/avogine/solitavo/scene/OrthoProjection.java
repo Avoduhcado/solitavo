@@ -23,7 +23,7 @@ public class OrthoProjection extends Projection {
 	}
 	
 	@Override
-	public void updateProjectionMatrix(int width, int height) {
+	public void setAspectRatio(int width, int height) {
 		getProjectionMatrix().setOrtho2D(0, width, height, 0);
 	}
 

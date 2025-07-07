@@ -45,8 +45,13 @@ public class Foundation implements CardStack {
 	 * @param card
 	 */
 	public void addCard(Card card) {
+		if (isEmpty()) {
+			card.setPosition(position);
+		} else {
+			stack.getLast().setPosition(position);
+			card.setPosition(position.x + 2, position.y + 2);
+		}
 		stack.add(card);
-		card.setPosition(position);
 	}
 	
 	@Override
@@ -56,7 +61,10 @@ public class Foundation implements CardStack {
 	
 	@Override
 	public List<Card> removeCards(List<Card> cards) {
-		this.stack.removeAll(cards);
+		stack.removeAll(cards);
+		if (!isEmpty()) {
+			stack.getLast().setPosition(position.x + 2, position.y + 2);
+		}
 		return cards;
 	}
 	
@@ -76,11 +84,6 @@ public class Foundation implements CardStack {
 	 */
 	public void render(SpriteRender renderer, TextureAtlas texture) {
 		renderer.renderSpriteAtlas(position, size, texture, Rank.KING.ordinal(), Suit.BONUS.ordinal());
-		if (!isEmpty() && stack.size() > 1) {
-			var secondTopCard = stack.get(stack.size() - 2);
-			renderer.renderSpriteAtlas(secondTopCard.getPosition(), secondTopCard.getSize(), texture, secondTopCard.getRank().ordinal(), secondTopCard.getSuit().ordinal());
-		}
-		getTopCard().ifPresent(topCard -> renderer.renderSpriteAtlas(topCard.getPosition(), topCard.getSize(), texture, topCard.getRank().ordinal(), topCard.getSuit().ordinal()));
 	}
 	
 	@Override
@@ -106,6 +109,16 @@ public class Foundation implements CardStack {
 	@Override
 	public Rectanglef getBoundingBox() {
 		return boundingBox;
+	}
+
+	@Override
+	public Vector2f getNextSpace() {
+		return position;
+	}
+	
+	@Override
+	public String toString() {
+		return "Foundation [ " + ((int) (position.x() / size.x()) - 3) + " ]";
 	}
 
 }

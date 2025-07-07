@@ -13,7 +13,7 @@ import org.joml.Math;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.system.MemoryStack;
 
-import com.avogine.render.data.texture.Texture;
+import com.avogine.render.opengl.Texture;
 import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.render.shaders.SpriteShader;
 
