@@ -2,7 +2,7 @@ package com.avogine.solitavo.render.data;
 
 import java.util.Objects;
 
-import com.avogine.render.opengl.Texture;
+import com.avogine.render.opengl.texture.Texture;
 
 /**
  * A tightly packed texture atlas where each cell has the same dimensions

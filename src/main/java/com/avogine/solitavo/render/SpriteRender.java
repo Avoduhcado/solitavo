@@ -1,7 +1,6 @@
 package com.avogine.solitavo.render;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -13,7 +12,7 @@ import org.joml.Math;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.system.MemoryStack;
 
-import com.avogine.render.opengl.Texture;
+import com.avogine.render.opengl.texture.Texture;
 import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.render.shaders.SpriteShader;
 
@@ -195,8 +194,7 @@ public class SpriteRender {
 	}
 	
 	private void bindSpriteTexture(Texture texture) {
-		glActiveTexture(GL_TEXTURE0);
-		texture.bind();
+		texture.activate(0);
 	}
 
 	/**

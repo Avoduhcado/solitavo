@@ -7,8 +7,8 @@ import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import com.avogine.game.scene.*;
-import com.avogine.render.font.FontCache;
-import com.avogine.render.opengl.image.util.TextureCache;
+import com.avogine.render.opengl.font.util.FontCache;
+import com.avogine.render.opengl.texture.util.TextureCache;
 import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
 import com.avogine.solitavo.scene.klondike.Stock.DrawMode;

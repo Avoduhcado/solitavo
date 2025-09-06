@@ -19,8 +19,9 @@ import org.joml.*;
 
 import com.avogine.io.Window;
 import com.avogine.render.*;
-import com.avogine.render.opengl.Texture;
 import com.avogine.render.opengl.font.Font;
+import com.avogine.render.opengl.texture.Texture;
+import com.avogine.render.opengl.ui.TextRender;
 import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.KlondikeScene;
 import com.avogine.solitavo.scene.cards.*;
