@@ -30,4 +30,6 @@ src/**/experimental/
 hs_err_pid*
 
 # Eclipse config files #
+.classpath
 .factorypath
+.project
