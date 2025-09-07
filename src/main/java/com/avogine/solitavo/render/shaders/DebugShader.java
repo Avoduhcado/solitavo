@@ -1,7 +1,9 @@
 package com.avogine.solitavo.render.shaders;
 
-import com.avogine.render.shader.ShaderProgram;
-import com.avogine.render.shader.uniform.*;
+import static com.avogine.util.resource.ResourceConstants.SHADERS;
+
+import com.avogine.render.opengl.shader.ShaderProgram;
+import com.avogine.render.opengl.shader.uniform.*;
 
 /**
  *
@@ -17,7 +19,7 @@ public class DebugShader extends ShaderProgram {
 	 * 
 	 */
 	public DebugShader() {
-		super("debugVertex.glsl", "debugFragment.glsl");
+		super(SHADERS.with("debugVertex.glsl"), SHADERS.with("debugFragment.glsl"));
 		storeAllUniformLocations(projection, model, lineColor);
 	}
 	

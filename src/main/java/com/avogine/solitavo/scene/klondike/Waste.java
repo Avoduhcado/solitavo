@@ -6,8 +6,8 @@ import org.joml.Math;
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.render.data.TextureAtlas;
 import com.avogine.solitavo.render.SpriteRender;
+import com.avogine.solitavo.render.data.TextureAtlas;
 import com.avogine.solitavo.scene.cards.Card;
 import com.avogine.solitavo.scene.util.CardHolder;
 
@@ -81,11 +81,12 @@ public class Waste implements CardHolder {
 	}
 	
 	private void splayCards() {
+		boolean moreThanThree = cards.size() > 3;
 		cards.forEach(card -> card.setPosition(position));
 		var topCards = cards.subList(Math.max(0, cards.size() - 3), cards.size());
 		for (int i = 0; i < topCards.size(); i++) {
 			topCards.get(i).setFaceUp(true);
-			topCards.get(i).setPosition(position.x + (i * 18), position.y);
+			topCards.get(i).setPosition(position.x + (i * 18) + (moreThanThree ? 2 : 0), position.y);
 		}
 	}
 	
@@ -109,6 +110,16 @@ public class Waste implements CardHolder {
 		} else {
 			return cards.getLast().getBoundingBox();
 		}
+	}
+
+	@Override
+	public Vector2f getNextSpace() {
+		return position;
+	}
+	
+	@Override
+	public String toString() {
+		return "Waste";
 	}
 
 }

@@ -11,6 +11,7 @@ import static org.lwjgl.opengl.GL11C.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11C.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11C.glBlendFunc;
 import static org.lwjgl.opengl.GL11C.glDisable;
+import static org.lwjgl.opengl.GL11C.glViewport;
 import static org.lwjgl.opengl.GL13C.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL14C.*;
 
@@ -18,12 +19,15 @@ import org.joml.*;
 
 import com.avogine.io.Window;
 import com.avogine.render.*;
-import com.avogine.render.data.*;
-import com.avogine.render.loader.font.FontCache;
-import com.avogine.render.loader.texture.TextureCache;
-import com.avogine.solitavo.scene.*;
+import com.avogine.render.opengl.font.Font;
+import com.avogine.render.opengl.texture.Texture;
+import com.avogine.render.opengl.ui.TextRender;
+import com.avogine.solitavo.render.data.TextureAtlas;
+import com.avogine.solitavo.scene.KlondikeScene;
 import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
+import com.avogine.solitavo.scene.util.CardComparator;
+import com.avogine.util.resource.ResourceConstants;
 
 /**
  *
@@ -40,8 +44,9 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	private final Vector4f debugTableauColor;
 	private final Vector4f debugHandColor;
 	
-	private TextureAtlas texture;
-	private FontDetails uiFont;
+	private TextureAtlas cardSheetAtlas;
+	private Font uiFont;
+	private CardComparator cardComparator;
 	
 	/**
 	 * 
@@ -56,12 +61,12 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		debugFoundationsColor = new Vector4f(0f, 1f, 1f, 1f);
 		debugTableauColor = new Vector4f(0.5f, 0.5f, 0.5f, 1f);
 		debugHandColor = new Vector4f(0f, 0f, 0f, 1f);
+		
+		cardComparator = new CardComparator();
 	}
 	
 	@Override
-	public void init() {
-		SceneRender.super.init();
-
+	public void init(Window window) {
 		glEnable(GL_MULTISAMPLE);
 		
 		glEnable(GL_BLEND);
@@ -76,13 +81,14 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 	 * @param scene
 	 */
 	public void setupData(KlondikeScene scene) {
-		Matrix4f projection = scene.getProjection();
+		Matrix4f projection = scene.getProjection().getProjectionMatrix();
 		spriteRender.init(projection);
-		textRender.init(projection);
+		textRender.init(scene.getProjection().getWidth(), scene.getProjection().getHeight(), scene.getFontCache());
 		debugRender.init(projection);
 		
-		texture = TextureCache.getInstance().getTextureAtlas("Cardsheet.png", Rank.values().length, Suit.values().length);
-		uiFont = FontCache.getInstance().getFont("alagard.ttf");
+		Texture cardSheetTexture = scene.getTextureCache().getTexture(ResourceConstants.TEXTURES.with("Cardsheet.png"));
+		cardSheetAtlas = new TextureAtlas(cardSheetTexture, Rank.values().length, Suit.values().length);
+		uiFont = scene.getFontCache().getFont(ResourceConstants.FONTS.with("alagard.ttf"));
 	}
 
 	@Override
@@ -92,22 +98,22 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		
-		scene.getStock().render(spriteRender, texture);
-		scene.getWaste().render(spriteRender, texture);
+		glViewport(0, 0, window.getWidth(), window.getHeight());
+		
+		scene.getStock().render(spriteRender, cardSheetAtlas);
 		for (Foundation foundation : scene.getFoundations()) {
-			foundation.render(spriteRender, texture);
+			foundation.render(spriteRender, cardSheetAtlas);
 		}
-		for (Pile pile : scene.getTableau()) {
-			pile.render(spriteRender, texture);
-		}
-		scene.getHand().render(spriteRender, texture);
+		scene.getCards().stream()
+		.sorted(cardComparator)
+		.forEach(card -> spriteRender.renderSpriteAtlas(card.getPosition(), card.getSize(), cardSheetAtlas, card.getRank().ordinal(), card.getSuit().ordinal()));
 		
 		if (window.isDebugMode()) {
 			debugRender(scene);
 		}
 		
 		textRender.renderText(0, 0, "FPS: " + window.getFps());
-		textRender.renderText(504 / 2f, 0, "Moves: " + scene.getMoveCounter(), uiFont);
+		textRender.renderText(504 / 2f, 0, uiFont, "Moves: " + scene.getMoveCounter());
 		
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -132,12 +138,6 @@ public class KlondikeRender implements SceneRender<KlondikeScene> {
 		spriteRender.cleanup();
 		textRender.cleanup();
 		debugRender.cleanup();
-		if (texture != null) {
-			texture.cleanup();
-		}
-		if (uiFont != null) {
-			uiFont.cleanup();
-		}
 	}
 
 }

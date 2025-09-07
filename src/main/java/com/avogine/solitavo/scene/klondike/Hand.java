@@ -5,9 +5,6 @@ import java.util.*;
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.logging.AvoLog;
-import com.avogine.render.data.TextureAtlas;
-import com.avogine.solitavo.render.SpriteRender;
 import com.avogine.solitavo.scene.cards.Card;
 import com.avogine.solitavo.scene.command.*;
 import com.avogine.solitavo.scene.util.CardHolder;
@@ -18,7 +15,8 @@ import com.avogine.util.Pair;
  */
 public class Hand {
 
-	private final Map<Card, Vector2f> cards;
+	private final List<Card> cards;
+	private final List<Vector2f> initialPositions;
 	
 	private CardHolder supplier;
 	
@@ -28,7 +26,8 @@ public class Hand {
 	 * 
 	 */
 	public Hand() {
-		cards = new LinkedHashMap<>();
+		cards = new ArrayList<>();
+		initialPositions = new ArrayList<>();
 		boundingBox = new Rectanglef();
 	}
 	
@@ -37,6 +36,7 @@ public class Hand {
 	 */
 	public void init() {
 		cards.clear();
+		initialPositions.clear();
 		supplier = null;
 		updateBoundingBox();
 	}
@@ -47,11 +47,9 @@ public class Hand {
 	 */
 	public void holdCard(Card card, CardHolder supplier) {
 		this.supplier = supplier;
-		try {
-			this.cards.put(card, (Vector2f) card.getPosition().clone());
-		} catch (CloneNotSupportedException e) {
-			AvoLog.log().error("Failed to clone card position.", e);
-		}
+		cards.add(card);
+		initialPositions.add(new Vector2f().set(card.getPosition()));
+		card.setSelected(true);
 		updateBoundingBox();
 	}
 	
@@ -83,10 +81,12 @@ public class Hand {
 	 * 
 	 */
 	public void removeCards() {
-		cards.forEach(Card::setPosition);
-		cards.clear();
-		supplier = null;
-		updateBoundingBox();
+		cards.forEach(card -> {
+			var initialPosition = initialPositions.get(cards.indexOf(card));
+			card.setPosition(initialPosition);
+			card.setSelected(false);
+		});
+		init();
 	}
 	
 	/**
@@ -94,9 +94,8 @@ public class Hand {
 	 * @return 
 	 */
 	public CardOperation placeCards(CardHolder consumer) {
-		var moveOperation = new CardMoveOperation(getCards(), supplier, consumer);
-		cards.clear();
-		updateBoundingBox();
+		var moveOperation = new CardAnimatedMoveOperation(getCards(), supplier, consumer);
+		init();
 		return moveOperation;
 	}
 	
@@ -105,7 +104,7 @@ public class Hand {
 	 * @param y
 	 */
 	public void move(float x, float y) {
-		cards.keySet().forEach(card -> card.getPosition().add(x, y));
+		cards.forEach(card -> card.getPosition().add(x, y));
 		updateBoundingBox();
 	}
 	
@@ -118,14 +117,6 @@ public class Hand {
 			boundingBox.setMin(cardList.getFirst().getPosition())
 			.setMax(lastCard.getPosition().x + lastCard.getSize().x, lastCard.getPosition().y + lastCard.getSize().y);
 		}
-	}
-	
-	/**
-	 * @param render
-	 * @param texture
-	 */
-	public void render(SpriteRender render, TextureAtlas texture) {
-		cards.keySet().forEach(card -> render.renderSpriteAtlas(card.getPosition(), card.getSize(), texture, card.getRank().ordinal(), card.getSuit().ordinal()));
 	}
 	
 	/**
@@ -153,7 +144,7 @@ public class Hand {
 	 * @return
 	 */
 	public List<Card> getCards() {
-		return cards.keySet().stream().toList();
+		return cards;
 	}
 	
 	/**
@@ -161,6 +152,11 @@ public class Hand {
 	 */
 	public CardHolder getSupplier() {
 		return supplier;
+	}
+	
+	@Override
+	public String toString() {
+		return "Hand";
 	}
 	
 }

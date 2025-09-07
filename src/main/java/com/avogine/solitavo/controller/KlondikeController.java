@@ -1,20 +1,26 @@
 package com.avogine.solitavo.controller;
 
+import java.nio.IntBuffer;
 import java.util.*;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import org.joml.*;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryStack;
 
+import com.avogine.game.scene.Projection;
 import com.avogine.io.Window;
 import com.avogine.io.event.*;
-import com.avogine.io.listener.*;
+import com.avogine.io.event.MouseEvent.*;
+import com.avogine.io.listener.InputAdapter;
+import com.avogine.logging.AvoLog;
 import com.avogine.solitavo.Solitavo;
-import com.avogine.solitavo.scene.*;
-import com.avogine.solitavo.scene.cards.*;
+import com.avogine.solitavo.scene.KlondikeScene;
+import com.avogine.solitavo.scene.cards.Card;
 import com.avogine.solitavo.scene.command.*;
 import com.avogine.solitavo.scene.klondike.*;
 import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
@@ -24,16 +30,20 @@ import com.avogine.util.Pair;
 /**
  *
  */
-public class KlondikeController implements MouseButtonListener, MouseMotionListener, KeyListener {
+public class KlondikeController extends InputAdapter {
 
-	private final Vector2f lastMouse = new Vector2f();
+	private final Vector2f lastMouse;
 
-	private final ArrayDeque<CardOperation> operations = new ArrayDeque<>();
+	private final ArrayDeque<CardOperation> operations;
 
-	private final Random random = new Random();
+	private final Vector3f transformedMouse3D;
+	private final Vector2f transformedMouse;
+	
+	private final Random random;
 	private long seed;
 	
-	private Matrix4f projection;
+	private Projection projection;
+	private List<Card> deck;
 	private Stock stock;
 	private Waste waste;
 	private Foundation[] foundations;
@@ -44,12 +54,27 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 	private AtomicInteger moveCounter;
 	
 	/**
+	 * 
+	 */
+	public KlondikeController() {
+		lastMouse = new Vector2f();
+		
+		operations = new ArrayDeque<>();
+		
+		transformedMouse3D = new Vector3f();
+		transformedMouse = new Vector2f();
+		
+		random = new Random();
+	}
+	
+	/**
 	 * @param game 
 	 * @param window
 	 */
 	public void init(Solitavo game, Window window) {
 		KlondikeScene scene = game.getScene();
 		projection = scene.getProjection();
+		deck = scene.getCards();
 		stock = scene.getStock();
 		waste = scene.getWaste();
 		foundations = scene.getFoundations();
@@ -59,7 +84,7 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 		tableauBounds = scene.getTableauBounds();
 		moveCounter = scene.getMoveCounter();
 		
-		window.getInput().addInputListener(this);
+		window.addInputListener(this);
 		
 		setupTable(random.nextLong());
 	}
@@ -72,17 +97,11 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 	}
 	
 	private void setupTable() {
-		List<Card> cards = new ArrayList<>();
-		for (int i = 0; i < 52; i++) {
-			int rankIndex = i % Rank.values().length;
-			int suitIndex = i / Rank.values().length;
-			cards.add(new Card(new Vector2f(), Rank.values()[rankIndex], Suit.values()[suitIndex]));
-		}
 		random.setSeed(seed);
-		Collections.shuffle(cards, random);
+		Collections.shuffle(deck, random);
 		
 		stock.init();
-		stock.addCards(cards);
+		stock.addCards(deck);
 		
 		waste.init();
 		
@@ -112,31 +131,55 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 	
 	private void executeOperation(CardOperation operation) {
 		operations.add(operation);
-		operation.execute();
-		
+	}
+	
+	private void undoOperation() {
+		if (operations.isEmpty()) {
+			return;
+		}
+		var operation = operations.pollLast();
+		if (AvoLog.log().isDebugEnabled()) {
+			operation.describe();
+		}
+		operation.rollback();
+
 		if (operation.incrementsMoves()) {
 			moveCounter.incrementAndGet();
 		}
-		
+
 		computeFoundationBounds();
 		computeTableauBounds();
 	}
 	
-	private void undoOperation() {
-		if (operations.peekLast() != null) {
-//			operations.peekLast().describe();
-			CardOperation operation = operations.pollLast();
-			operation.rollback();
-
-			if (operation.incrementsMoves()) {
-				moveCounter.incrementAndGet();
-			}
-			
-			computeFoundationBounds();
-			computeTableauBounds();
+	/**
+	 * @param delta
+	 */
+	public void update(float delta) {
+		if (operations.isEmpty()) {
+			return;
 		}
+		
+		operations.stream()
+		.dropWhile(Predicate.not(CardOperation::isExecuting))
+		.findFirst()
+		.ifPresent(op -> {
+			op.execute(delta);
+			if (!op.isExecuting()) {
+				op.commit();
+				if (AvoLog.log().isDebugEnabled()) {
+					op.describe();
+				}
+				
+				if (op.incrementsMoves()) {
+					moveCounter.incrementAndGet();
+				}
+				
+				computeFoundationBounds();
+				computeTableauBounds();
+			}
+		});
 	}
-
+	
 	private Rectanglef computeFoundationBounds() {
 		foundationsBounds.setMin(foundationsBounds.minX, foundationsBounds.minY).setMax(foundationsBounds.minX, foundationsBounds.minY);
 		for (var stack : foundations) {
@@ -166,13 +209,13 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 		var stockCards = stock.getCardsToDraw();
 		if (stockCards.isEmpty()) {
 			if (waste.getCard().isPresent()) {
-				return Optional.of(new CardMoveOperation(waste.getRecycleCards(), waste, stock, true));
+				return Optional.of(new CardAnimatedMoveOperation(waste.getRecycleCards(), waste, stock, true));
 			} else {
 				return Optional.empty();
 			}
 		}
 		
-		return Optional.of(new CardMoveOperation(stockCards, stock, waste, true));
+		return Optional.of(new CardAnimatedMoveOperation(stockCards, stock, waste, true));
 	}
 	
 	private Optional<CardOperation> getOperationForWasteClick() {
@@ -187,7 +230,16 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 			return Optional.empty();
 		}
 		
-		return Optional.of(new CardMoveOperation(wasteCardList, waste, destinationStack.get()));
+		return Optional.of(new CardAnimatedMoveOperation(wasteCardList, waste, destinationStack.get()));
+	}
+	
+	private Optional<Pair<Card, CardHolder>> getCardFromWaste() {
+		var wasteCard = waste.getCard();
+		if (wasteCard.isEmpty()) {
+			return Optional.empty();
+		} else {
+			return Optional.of(new Pair<Card, CardHolder>(wasteCard.get(), waste));
+		}
 	}
 	
 	private Optional<Pair<Card, CardHolder>> getSelectedFoundation() {
@@ -210,7 +262,7 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 			return Optional.empty();
 		}
 		
-		return Optional.of(new CardMoveOperation(foundationCard, foundationStack, destinationStack.get()));
+		return Optional.of(new CardAnimatedMoveOperation(foundationCard, foundationStack, destinationStack.get()));
 	}
 	
 	private Optional<Pair<List<Card>, CardHolder>> getSelectedTableau() {
@@ -233,7 +285,7 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 			return Optional.empty();
 		}
 		
-		return Optional.of(new CardMoveOperation(tableauCards, tableauPile, destinationStack.get()));
+		return Optional.of(new CardAnimatedMoveOperation(tableauCards, tableauPile, destinationStack.get()));
 	}
 	
 	private Optional<CardStack> getAutoDestinationStackForCardsFrom(List<Card> cards, Stream<CardStack> streamOfDestinations) {
@@ -252,10 +304,31 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 				.findFirst();
 	}
 	
+	private Vector2f transformMousePosition(long window, float mouseX, float mouseY) {
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			IntBuffer width = stack.mallocInt(1);
+			IntBuffer height = stack.mallocInt(1);
+			
+			GLFW.glfwGetFramebufferSize(window, width, height);
+			
+			int displayWidth = width.get(0);
+			int displayHeight = height.get(0);
+			float halfWidth = displayWidth / 2.0f;
+			float halfHeight = displayHeight / 2.0f;
+			return projection.invert()
+					.transformPosition(mouseX, -mouseY, 0, transformedMouse3D)
+					.div(halfWidth, halfHeight, 1.0f)
+					.xy(transformedMouse);
+		}
+	}
+	
+	private Vector2f transformMouseButtonEvent(MouseButtonEvent event) {
+		return transformMousePosition(event.window().getId(), event.mouseX(), event.mouseY());
+	}
+	
 	@Override
-	public void mouseClicked(MouseEvent event) {
-		event.transformPoint(projection);
-		lastMouse.set(event.mouseX, event.mouseY);
+	public void mouseClicked(MouseButtonEvent event) {
+		lastMouse.set(transformMouseButtonEvent(event));
 		
 		if (stock.getBoundingBox().containsPoint(lastMouse)) {
 			Optional<CardOperation> stockClickOperation = getOperationForStockClick();
@@ -272,56 +345,51 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 		}
 	}
 	
+	private Consumer<Pair<Card, CardHolder>> holdAndConsume(Consumer<Pair<Card, CardHolder>> holdCardConsumer, ConsumableEvent event) {
+		return holdCardConsumer.andThen(_ -> event.consume());
+	}
+	
 	@Override
-	public void mousePressed(MouseEvent event) {
-		event.transformPoint(projection);
-		lastMouse.set(event.mouseX, event.mouseY);
+	public void mousePressed(MouseButtonEvent event) {
+		lastMouse.set(transformMouseButtonEvent(event));
 		
 		if (waste.getBoundingBox().containsPoint(lastMouse)) {
-			waste.getCard().ifPresent(card -> hand.holdCard(card, waste));
+			getCardFromWaste().ifPresent(_ -> holdAndConsume(hand::holdCard, event));
 		} else if (foundationsBounds.containsPoint(lastMouse)) {
-			getSelectedFoundation().ifPresent(hand::holdCard);
+			getSelectedFoundation().ifPresent(_ -> holdAndConsume(hand::holdCard, event));
 		} else if (tableauBounds.containsPoint(lastMouse)) {
-			getSelectedTableau().ifPresent(hand::holdCards);
+			getSelectedTableau().ifPresent(_ -> holdAndConsume(hand::holdCard, event));
 		}
 	}
 	
 	@Override
-	public void mouseReleased(MouseEvent event) {
+	public void mouseReleased(MouseButtonEvent event) {
 		if (hand.isEmpty()) {
 			return;
 		}
 		
 		Optional<CardStack> destinationStack = getDestinationStackForCards(hand.getCards());
 		if (destinationStack.isEmpty() || destinationStack.get() == hand.getSupplier()) {
+			// TODO This should likely generate a CardOperation rather than just teleporting the cards back
 			hand.removeCards();
+			event.consume();
 			return;
 		}
 		
 		CardOperation placeCardsOperation = hand.placeCards(destinationStack.get());
 		executeOperation(placeCardsOperation);
+		event.consume();
 	}
 	
 	@Override
-	public void mouseMoved(MouseEvent event) {
-		// Not Implemented
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent event) {
-		event.transformPoint(projection);
+	public void mouseDragged(MouseDraggedEvent event) {
+		Vector2f screenSpaceMouse = transformMouseButtonEvent(event);
 		if (!hand.isEmpty()) {
-			float x = event.mouseX;
-			float y = event.mouseY;
-			hand.move(x - lastMouse.x, y - lastMouse.y);
+			hand.move(screenSpaceMouse.x - lastMouse.x, screenSpaceMouse.y - lastMouse.y);
 			
-			lastMouse.set(x, y);
+			lastMouse.set(screenSpaceMouse);
+			event.consume();
 		}
-	}
-
-	@Override
-	public void keyPressed(KeyEvent event) {
-		// Not Implemented
 	}
 
 	@Override
@@ -330,7 +398,7 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 			// Don't perform undo operations while holding a card, likely unnecessary for setupTable but good to avoid for now.
 			return;
 		}
-		switch (event.key) {
+		switch (event.key()) {
 			case GLFW.GLFW_KEY_Z -> undoOperation();
 			case GLFW.GLFW_KEY_Q -> setupTable();
 			case GLFW.GLFW_KEY_E -> setupTable(random.nextLong());
@@ -343,14 +411,10 @@ public class KlondikeController implements MouseButtonListener, MouseMotionListe
 			// TODO Put this in a menu so you can't just change it mid game
 			case GLFW.GLFW_KEY_1 -> stock.setDrawMode(stock.getDrawMode()== DrawMode.STANDARD ? DrawMode.SINGLE : DrawMode.STANDARD);
 			default -> {
-				// Unbound key
+				return;
 			}
 		}
-	}
-
-	@Override
-	public void keyTyped(KeyEvent event) {
-		// Not Implemented
+		event.consume();
 	}
 
 }

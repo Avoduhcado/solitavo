@@ -1,12 +1,15 @@
 package com.avogine.solitavo.scene;
 
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
-import com.avogine.game.scene.Scene;
-import com.avogine.solitavo.scene.cards.Card;
+import com.avogine.game.scene.*;
+import com.avogine.render.opengl.font.util.FontCache;
+import com.avogine.render.opengl.texture.util.TextureCache;
+import com.avogine.solitavo.scene.cards.*;
 import com.avogine.solitavo.scene.klondike.*;
 import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
 
@@ -14,6 +17,8 @@ import com.avogine.solitavo.scene.klondike.Stock.DrawMode;
  *
  */
 public class KlondikeScene extends Scene {
+	
+	private final List<Card> deck;
 	
 	private final Stock stock;
 	private final Waste waste;
@@ -26,16 +31,25 @@ public class KlondikeScene extends Scene {
 	
 	private final AtomicInteger moveCounter;
 	
+	private final TextureCache textureCache;
+	private final FontCache fontCache;
+	
 	private DrawMode stockDraw = DrawMode.STANDARD;
 	
 	/**
 	 * 
 	 */
 	public KlondikeScene() {
+		super(new OrthoProjection(504, 500), new Camera());
 		final Vector2f cardSize = Card.DEFAULT_SIZE;
 		final Vector2f tableOffset = new Vector2f(0f, 24f);
 		
-		projection.setOrtho2D(0, 504, 500, 0);
+		deck = new ArrayList<>();
+		for (int i = 0; i < 52; i++) {
+			int rankIndex = i % Rank.values().length;
+			int suitIndex = i / Rank.values().length;
+			deck.add(new Card(new Vector2f(), Rank.values()[rankIndex], Suit.values()[suitIndex]));
+		}
 		
 		stock = new Stock(new Vector2f(0f, 0f).add(tableOffset), cardSize, stockDraw);
 		waste = new Waste(new Vector2f(72f, 0f).add(tableOffset), cardSize);
@@ -55,6 +69,9 @@ public class KlondikeScene extends Scene {
 		tableauBounds = new Rectanglef();
 		
 		moveCounter = new AtomicInteger();
+		
+		textureCache = new TextureCache();
+		fontCache = new FontCache();
 	}
 	
 	// Debug
@@ -64,6 +81,22 @@ public class KlondikeScene extends Scene {
 //			cards.get(i).setFaceUp(true);
 //		}
 //	}
+	
+	/**
+	 * Free allocated resources.
+	 */
+	public void cleanup() {
+		textureCache.cleanup();
+		fontCache.cleanup();
+	}
+	
+	/**
+	 * This should never be modified directly.
+	 * @return the complete deck of cards
+	 */
+	public List<Card> getCards() {
+		return deck;
+	}
 	
 	/**
 	 * @return the stock
@@ -119,6 +152,20 @@ public class KlondikeScene extends Scene {
 	 */
 	public AtomicInteger getMoveCounter() {
 		return moveCounter;
+	}
+	
+	/**
+	 * @return the textureCache
+	 */
+	public TextureCache getTextureCache() {
+		return textureCache;
+	}
+	
+	/**
+	 * @return the fontCache
+	 */
+	public FontCache getFontCache() {
+		return fontCache;
 	}
 	
 }
